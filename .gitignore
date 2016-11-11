@@ -1,0 +1,9 @@
+target/
+pdfs/
+/timings/times.dat
+/timings/times.dat.bak
+.project
+.cache-main
+.classpath
+.settings/
+/bin/

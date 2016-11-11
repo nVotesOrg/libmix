@@ -21,7 +21,6 @@ import scala.collection.JavaConversions._
  * Some utilities
  */
 object Util {
-  val unsafe = ConfigFactory.load().getBoolean("bypass-membership-check")
   val generatorsParallel = ConfigFactory.load().getBoolean("use-generators-parallel")
   val generatorParallelism = ConfigFactory.load().getInt("generators-parallelism-level")
 

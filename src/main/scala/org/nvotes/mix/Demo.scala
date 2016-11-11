@@ -70,9 +70,7 @@ object ElectionTest extends App {
   val useGmp = config.getBoolean("mpservice.use-gmp")
   val useExtractor = config.getBoolean("mpservice.use-extractor")
   MPBridgeS.init(useGmp, useExtractor)
-  // actually used in Util.getE
-  val bypass = ConfigFactory.load().getBoolean("bypass-membership-check")
-  println(s"* bypass-membership-check: $bypass")
+
   // actually used in AbstractCyclicGroup constructor
   val generatorsParallel = ConfigFactory.load().getBoolean("use-generators-parallel")
   println(s"* use-generators-parallel: $generatorsParallel")
