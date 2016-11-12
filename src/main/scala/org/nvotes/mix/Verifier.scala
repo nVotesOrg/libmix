@@ -34,7 +34,6 @@ import ch.bfh.unicrypt.math.function.classes.ProductFunction
 import ch.bfh.unicrypt.math.function.interfaces.Function
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractSet
 import mpservice.MPBridgeS
-import mpservice.MPBridge
 
 /**
  * Proof settings common for proof generators and verifiers

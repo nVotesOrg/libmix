@@ -31,7 +31,6 @@ import ch.bfh.unicrypt.math.function.interfaces.Function
 import shapeless.Sized.sizedToRepr
 
 import mpservice.MPBridgeS
-import mpservice.MPBridge
 import scala.collection.JavaConversions._
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -79,12 +78,10 @@ class MixerTrustee(val id: String) extends Mixer {
 
     println("Convert votes..")
 
-    MPBridge.a()
     val votes = e.state match {
       case s: Mixing[_0] => e.state.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
       case _ => e.state.mixes.toList.last.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
     }
-    MPBridge.b()
 
     println("Mixer creating shuffle..")
 
@@ -106,12 +103,10 @@ class MixerTrustee(val id: String) extends Mixer {
     val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(e.state.publicKey)
     println("Convert votes..")
 
-    MPBridge.a()
     val votes = e.state match {
       case s: Mixing[_0] => e.state.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
       case _ => e.state.mixes.toList.last.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
     }
-    MPBridge.b()
 
     println("Mixer creating shuffle..")
 
@@ -147,11 +142,11 @@ trait KeyMaker extends ProofSettings {
 
     val success = pg.verify(proof, publicKey)
 
-    if (!success) {
-      throw new Exception("Failed verifying proof")
-    } else {
-      println("createShare: verified share ok")
-    }
+    // if (!success) {
+    //  throw new Exception("Failed verifying proof")
+    // } else {
+    //  println("createShare: verified share ok")
+    // }
 
     val sigmaProofDTO = SigmaProofDTO(pg.getCommitment(proof).convertToString(), pg.getChallenge(proof).convertToString(), pg.getResponse(proof).convertToString())
 
@@ -190,7 +185,6 @@ trait KeyMaker extends ProofSettings {
   private def createProof(proverId: String, secretKey: Element[_],
       publicKey: Element[_], partialDecryptions: Seq[Element[_]], generatorFunctions: Seq[Function], Csettings: CryptoSettings) = {
 
-    MPBridge.a()
     val encryptionGenerator = Csettings.generator
 
     // Create proof functions
@@ -211,7 +205,6 @@ trait KeyMaker extends ProofSettings {
 
 
     val proofSystem: EqualityPreimageProofSystem = EqualityPreimageProofSystem.getInstance(challengeGenerator, f1, f2)
-    MPBridge.b()
 
     // Generate and verify proof
     val proof: Triple = proofSystem.generate(privateInput, publicInput)
@@ -337,10 +330,10 @@ trait Mixer extends ProofSettings {
           println("Mixer: verifying..")
 
           val v1 = pcps.verify(permutationProof, publicInputPermutation)
-          MPBridge.z(); MPBridge.y();
+
           // Verify shuffle proof
           val v2 = spg.verify(mixProof, publicInputShuffle)
-          MPBridge.z(); MPBridge.y();
+
           // Verify equality of permutation commitments
           val v3 = publicInputPermutation.isEquivalent(publicInputShuffle.getFirst())
 
@@ -445,10 +438,10 @@ trait Mixer extends ProofSettings {
         println("Mixer: verifying..")
 
         val v1 = pcps.verify(permutationProof, publicInputPermutation)
-        MPBridge.z(); MPBridge.y();
+
         // Verify shuffle proof
         val v2 = spg.verify(mixProof, publicInputShuffle)
-        MPBridge.z(); MPBridge.y();
+
         // Verify equality of permutation commitments
         val v3 = publicInputPermutation.isEquivalent(publicInputShuffle.getFirst())
 
