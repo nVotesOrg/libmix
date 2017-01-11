@@ -39,10 +39,6 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 )
 
-// resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
-
-// resolvers += Resolver.jcenterRepo
-
 assemblyMergeStrategy in assembly := {
   case PathList("ch", "bfh", xs @ _*) => MergeStrategy.first
   case x if x.contains("apache/commons/logging") => MergeStrategy.last

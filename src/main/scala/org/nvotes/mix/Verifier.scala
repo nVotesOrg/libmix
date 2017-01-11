@@ -97,7 +97,6 @@ object Verifier extends ProofSettings {
         MultiIdentityFunction.getInstance(Csettings.group.getZModOrder(), generatorFunctions.length),
         ProductFunction.getInstance(generatorFunctions :_*))
 
-    // FIXME use Util.getE
     val pdElements = MPBridgeS.ex(pd.partialDecryptions.map(Csettings.group.asInstanceOf[AbstractSet[_,_]].getElementFrom(_)), "1")
 
     val publicInput: Pair = Pair.getInstance(publicKey, Tuple.getInstance(pdElements:_*))

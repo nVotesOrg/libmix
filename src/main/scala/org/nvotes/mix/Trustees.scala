@@ -140,8 +140,8 @@ trait KeyMaker extends ProofSettings {
 
     val proof: Triple = pg.generate(privateKey, publicKey)
 
-    val success = pg.verify(proof, publicKey)
-
+    // no self verification
+    // val success = pg.verify(proof, publicKey)
     // if (!success) {
     //  throw new Exception("Failed verifying proof")
     // } else {

@@ -14,4 +14,3 @@
 // along with agora-mixnet.  If not, see <http://www.gnu.org/licenses/>.
 
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.1")
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.5.2")
