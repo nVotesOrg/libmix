@@ -96,7 +96,6 @@ object MPBridgeS {
   import ch.bfh.unicrypt.helper.array.classes.DenseArray
   import ch.bfh.unicrypt.helper.sequence.Sequence
   import ch.bfh.unicrypt.math.algebra.general.interfaces.Element
-  import scala.collection.JavaConversions._
 
   // FIXME move to Util
   def getIndependentGenerators[E <: Element[_]](group: AbstractCyclicGroup[E, _], skip: Int, size: Int): java.util.List[E] = {

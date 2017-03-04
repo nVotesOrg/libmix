@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with agora-mixnet.  If not, see <http://www.gnu.org/licenses/>.
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.1"
 
-lazy val akkaVersion = "2.4.4"
+lazy val akkaVersion = "2.4.17"
 
 resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
@@ -23,8 +23,8 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.github.nscala-time" %% "nscala-time" % "2.6.0",
-  "com.chuusai" %% "shapeless" % "2.2.5",
+  "com.github.nscala-time" %% "nscala-time" % "2.16.0",
+  "com.chuusai" %% "shapeless" % "2.3.2",
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,

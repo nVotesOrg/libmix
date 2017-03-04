@@ -20,7 +20,7 @@ import ch.bfh.unicrypt.math.algebra.general.classes.ProductSet
 import mpservice.MPBridgeS
 import mpservice.MPBridge
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 
 /**

@@ -349,7 +349,7 @@ trait Mixer extends ProofSettings {
   }
 
   def shuffle(ciphertexts: Tuple, publicKey: Element[_], Csettings: CryptoSettings, proverId: String) = {
-    import scala.collection.JavaConversions._
+
     val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
 
     val mixer: ReEncryptionMixer = ReEncryptionMixer.getInstance(elGamal, publicKey, ciphertexts.getArity())

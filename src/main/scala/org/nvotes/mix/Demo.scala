@@ -9,6 +9,8 @@ import com.github.nscala_time.time.Imports._
 import com.typesafe.config.ConfigFactory
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Success
+import scala.util.Failure
 
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 import ch.bfh.unicrypt.crypto.schemes.encryption.classes.ElGamalEncryptionScheme
@@ -214,9 +216,16 @@ object ElectionTest extends App {
     }
   }
 
-  all.onFailure { case e =>
+  /* all.onFailure { case e =>
     e.printStackTrace
     MPBridgeS.shutdown
+  } */
+  all onComplete {
+    case Success(posts) => {}
+    case Failure(t) => {
+      t.printStackTrace()
+      MPBridge.shutdown()
+    }
   }
 
   import scala.concurrent.duration._
