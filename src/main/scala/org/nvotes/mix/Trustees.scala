@@ -26,7 +26,6 @@ import ch.bfh.unicrypt.math.function.classes.InvertFunction
 import ch.bfh.unicrypt.math.function.classes.MultiIdentityFunction
 import ch.bfh.unicrypt.math.function.classes.ProductFunction
 import ch.bfh.unicrypt.math.function.interfaces.Function
-import shapeless.Sized.sizedToRepr
 
 import mpservice.MPBridgeS
 import scala.collection.JavaConversions._

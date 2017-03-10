@@ -10,11 +10,12 @@ Fork of agora-mixnet, the following changes have been made
 * Converted CryptoTest to proper ScalaTest format (sbt test)
 * Rearranged packages
 * Separated demo code into its own package (some trustee code in Demo.scala)
+* Renamed Util.getE
 
 ### Work to do
 
-* Rename Util.getE or remove it entirely (see comments at definition)
 * Remove Akka clustering and akka dependencies
+* Remove demo code and shapeless dependency into other project
 * Re add unicrypt parallelism optimizations (this is the big part)
 * Re add benchmarking scripts
 * Add demo following reactive protocol using local bb

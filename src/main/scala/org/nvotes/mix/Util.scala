@@ -72,7 +72,7 @@ object Util {
    *  .asInstanceOf[AbstractSet[_,_]].getElementFrom(string)
    *
    */
-  def getE[A <: Element[B],B](set: AbstractSet[A, B], value: String): Element[B] = {
+  def fromString[A <: Element[B],B](set: AbstractSet[A, B], value: String): Element[B] = {
     set.getElementFrom(value)
   }
 

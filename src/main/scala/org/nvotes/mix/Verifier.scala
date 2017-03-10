@@ -140,12 +140,12 @@ object Verifier extends ProofSettings {
     val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(Csettings.group, votes.getArity())
 
     // val permutationCommitment = MPBridgeS.ex(pcs.getCommitmentSpace().getElementFromString(shuffleProof.permutationCommitment), "1")
-    val permutationCommitment = Util.getE(pcs.getCommitmentSpace(), shuffleProof.permutationCommitment)
+    val permutationCommitment = Util.fromString(pcs.getCommitmentSpace(), shuffleProof.permutationCommitment)
 
     println("Getting values..")
 
     // val commitment1 = MPBridgeS.ex(pcps.getCommitmentSpace().getElementFromString(shuffleProof.permutationProof.commitment), "1")
-    val commitment1 = Util.getE(pcps.getCommitmentSpace(), shuffleProof.permutationProof.commitment)
+    val commitment1 = Util.fromString(pcps.getCommitmentSpace(), shuffleProof.permutationProof.commitment)
     val challenge1 = pcps.getChallengeSpace.getElementFrom(shuffleProof.permutationProof.challenge)
     val response1 = pcps.getResponseSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.permutationProof.response)
 
@@ -173,7 +173,7 @@ object Verifier extends ProofSettings {
 
     // bridging commitments: GStarmod
     val bridgingCommitments = permutationProofDTO.bridgingCommitments.par.map { x =>
-      Util.getE(Csettings.group, x)
+      Util.fromString(Csettings.group, x)
     }.seq
 
     println("Converting permutation e values..")

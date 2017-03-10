@@ -158,10 +158,10 @@ object Election {
 
     val now = System.currentTimeMillis
 
-    val shuffled = mix.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
+    val shuffled = mix.votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
     val votes = in.state match {
-      case s: Mixing[_0] => in.state.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
-      case _ => in.state.mixes.toList.last.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
+      case s: Mixing[_0] => in.state.votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
+      case _ => in.state.mixes.toList.last.votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
     }
     println(s"vote conversion: [${System.currentTimeMillis - now} ms]")
 
@@ -193,7 +193,7 @@ object Election {
     println("Adding decryption...")
 
     val elGamal = ElGamalEncryptionScheme.getInstance(in.state.cSettings.generator)
-    val votes = in.state.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v).asInstanceOf[Pair]).seq
+    val votes = in.state.votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v).asInstanceOf[Pair]).seq
 
     val sharesMap = in.state.allShares.toMap
     val share = elGamal.getMessageSpace.getElementFrom(sharesMap(proverId))
@@ -211,7 +211,7 @@ object Election {
     // first convert partial decryptions (a^xi) to elements
     // this yields n lists of decryptions, where n = number of trustees, and there's one decryption per vote
     val decryptionElements = in.state.decryptions.map(
-      ds => ds.partialDecryptions.par.map(Util.getE(in.state.cSettings.group, _)).seq
+      ds => ds.partialDecryptions.par.map(Util.fromString(in.state.cSettings.group, _)).seq
     )
     // combine the list of decryptions:
     // obtain a^-x from individual a^-xi's (example below for n = 2)
@@ -229,7 +229,7 @@ object Election {
     println("Combining decryptions...Ok")
 
     val elGamal = ElGamalEncryptionScheme.getInstance(in.state.cSettings.generator)
-    val votes = in.state.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v).asInstanceOf[Pair] ).seq
+    val votes = in.state.votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v).asInstanceOf[Pair] ).seq
     // a^-x * b = m
     val decrypted = (votes zip combined).par.map(c => c._1.getSecond().apply(c._2)).seq
     val encoder = ZModPrimeToGStarModSafePrime.getInstance(in.state.cSettings.group)

@@ -32,7 +32,7 @@ class CryptoSpec extends FlatSpec {
   	val votes = Util.encryptVotes(plaintexts, Csettings, publicKey)
 
     val shuffleResult = MX.shuffle(Util.tupleFromSeq(votes), publicKey, Csettings, "proverId")
-    val shuffled = shuffleResult.votes.map( v => Util.getE(elGamal.getEncryptionSpace, v) )
+    val shuffled = shuffleResult.votes.map( v => Util.fromString(elGamal.getEncryptionSpace, v) )
 
     val verified = Verifier.verifyShuffle(Util.tupleFromSeq(votes), Util.tupleFromSeq(shuffled),
       shuffleResult.shuffleProof, "proverId", publicKey, Csettings)
