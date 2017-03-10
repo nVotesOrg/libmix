@@ -15,34 +15,17 @@
 
 scalaVersion := "2.12.1"
 
-lazy val akkaVersion = "2.4.17"
-
 resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )
 
 libraryDependencies ++= Seq(
-  "com.github.nscala-time" %% "nscala-time" % "2.16.0",
-  "com.chuusai" %% "shapeless" % "2.3.2",
-  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-  "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
-  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-  "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
-  "com.typesafe.akka" %% "akka-cluster-metrics" % akkaVersion,
-  // "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-  // "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
-  // "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
-  // "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion,
-  "org.fusesource" % "sigar" % "1.6.4",
-  "org.scalactic" %% "scalactic" % "3.0.0",
   "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 )
 
 assemblyMergeStrategy in assembly := {
   case PathList("ch", "bfh", xs @ _*) => MergeStrategy.first
-  case x if x.contains("apache/commons/logging") => MergeStrategy.last
-  case x if x.contains("META-INF/io.netty.versions.properties") => MergeStrategy.last
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)

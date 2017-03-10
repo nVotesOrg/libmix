@@ -11,11 +11,11 @@ Fork of agora-mixnet, the following changes have been made
 * Rearranged packages
 * Separated demo code into its own package (some trustee code in Demo.scala)
 * Renamed Util.getE
+* Removed Akka clustering and akka dependencies
+* Removed demo code and shapeless dependency into other project
 
 ### Work to do
 
-* Remove Akka clustering and akka dependencies
-* Remove demo code and shapeless dependency into other project
 * Re add unicrypt parallelism optimizations (this is the big part)
 * Re add benchmarking scripts
 * Add demo following reactive protocol using local bb

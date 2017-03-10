@@ -8,7 +8,6 @@ import ch.bfh.unicrypt.math.algebra.general.classes.Pair
 import ch.bfh.unicrypt.math.algebra.general.classes.Tuple
 import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import ch.bfh.unicrypt.math.algebra.general.classes.ProductSet
-import com.typesafe.config.ConfigFactory
 import ch.bfh.unicrypt.helper.converter.classes.biginteger.ByteArrayToBigInteger
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractCyclicGroup
 import ch.bfh.unicrypt.helper.random.deterministic.CTR_DRBG
@@ -21,8 +20,11 @@ import scala.collection.JavaConversions._
  * Some utilities
  */
 object Util {
-  val generatorsParallel = ConfigFactory.load().getBoolean("use-generators-parallel")
-  val generatorParallelism = ConfigFactory.load().getInt("generators-parallelism-level")
+  // FIXME
+  // val generatorsParallel = ConfigFactory.load().getBoolean("use-generators-parallel")
+  // val generatorParallelism = ConfigFactory.load().getInt("generators-parallelism-level")
+  val generatorsParallel = true
+  val generatorParallelism = 10
 
   def tupleFromSeq(items: Seq[Element[_]]) = {
     Tuple.getInstance(items:_*)
