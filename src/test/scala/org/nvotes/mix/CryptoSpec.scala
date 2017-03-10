@@ -9,7 +9,7 @@ import java.math.BigInteger
 
 import org.scalatest.FlatSpec
 
-class SetSpec extends FlatSpec {
+class CryptoSpec extends FlatSpec {
 
   val grp = GStarModSafePrime.getFirstInstance(2048)
 

@@ -1,4 +1,5 @@
-package org.nvotes.mix
+package org.nvotes.mix.demo
+
 
 import shapeless._
 import nat._
@@ -17,11 +18,11 @@ import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import ch.bfh.unicrypt.crypto.encoder.interfaces.Encoder
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractSet
 import ch.bfh.unicrypt.math.algebra.general.classes.ProductSet
-import mpservice.MPBridgeS
-import mpservice.MPBridge
 
 import scala.collection.JavaConverters._
-
+import org.nvotes.mix._
+import mpservice.MPBridgeS
+import mpservice.MPBridge
 
 /**
  * An election is a typed, purely function state machine with an immutable history

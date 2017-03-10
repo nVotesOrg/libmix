@@ -59,7 +59,19 @@ object Util {
     keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
   }
 
-  // get element from string
+
+  /** Get an element from its string representation
+   *
+   *  This function exists because the scala compiler reports an ambiguity
+   *  when using the getElementFrom method without casting to AbstractSet,
+   *  since ProductSet contains an ellipsis overload which accepts one argument
+   *  as a particular case.
+   *
+   *  We can either rename this function or get rid of it, using casts like:
+   *
+   *  .asInstanceOf[AbstractSet[_,_]].getElementFrom(string)
+   *
+   */
   def getE[A <: Element[B],B](set: AbstractSet[A, B], value: String): Element[B] = {
     set.getElementFrom(value)
   }

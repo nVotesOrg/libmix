@@ -1,4 +1,4 @@
-package org.nvotes.mix
+package org.nvotes.mix.demo
 
 import shapeless._
 import nat._
@@ -11,6 +11,7 @@ import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Success
 import scala.util.Failure
+import scala.collection.mutable.{ Map => MutableMap }
 
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 import ch.bfh.unicrypt.crypto.schemes.encryption.classes.ElGamalEncryptionScheme
@@ -19,6 +20,8 @@ import ch.bfh.unicrypt.math.algebra.general.classes.Pair
 import ch.bfh.unicrypt.math.algebra.general.classes.Tuple
 import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import ch.bfh.unicrypt.crypto.encoder.interfaces.Encoder
+
+import org.nvotes.mix._
 import mpservice.MPBridgeS
 import mpservice.MPBridge
 
@@ -488,5 +491,79 @@ object Issue3 extends App {
     println(v.getFirst.isGenerator)
     val decryption = elGamal.decrypt(privateKey, v)
     println("decrypted " + decryption)
+  }
+}
+
+/**
+ * Represents a key maker trustee
+ *
+ * Mixes in the KeyMaker trait (below) as well as managing an identity and private shares
+ */
+class KeyMakerTrustee(val id: String, privateShares: MutableMap[String, String] = MutableMap()) extends KeyMaker {
+  def createKeyShare(e: Election[_, Shares[_]]) = {
+    println("KeyMaker creating share..")
+
+    val (encryptionKeyShareDTO, privateKey) = createShare(id, e.state.cSettings)
+    privateShares += (e.state.id -> privateKey)
+    encryptionKeyShareDTO
+  }
+
+  def partialDecryption(e: Election[_, Decryptions[_]]) = {
+    val elGamal = ElGamalEncryptionScheme.getInstance(e.state.cSettings.generator)
+    val votes = e.state.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v).asInstanceOf[Pair]).seq
+    val secretKey = e.state.cSettings.group.getZModOrder().getElementFrom(privateShares(e.state.id))
+
+    partialDecrypt(votes, secretKey, id, e.state.cSettings)
+  }
+}
+
+/**
+ * Represents a mixer trustee
+ *
+ * Simply mixes in the Mixer trait (below) as well as managing an identity (which is used as the proverId)
+ */
+class MixerTrustee(val id: String) extends Mixer {
+  def shuffleVotes(e: Election[_, Mixing[_]]) = {
+    println("Mixer shuffle..")
+
+    val elGamal = ElGamalEncryptionScheme.getInstance(e.state.cSettings.generator)
+    val keyPairGen = elGamal.getKeyPairGenerator()
+    val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(e.state.publicKey)
+
+    println("Convert votes..")
+
+    val votes = e.state match {
+      case s: Mixing[_0] => e.state.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
+      case _ => e.state.mixes.toList.last.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
+    }
+
+    println("Mixer creating shuffle..")
+
+    shuffle(Util.tupleFromSeq(votes), publicKey, e.state.cSettings, id)
+  }
+
+  def preShuffleVotes(e: Election[_, VotesStopped]) = {
+    val elGamal = ElGamalEncryptionScheme.getInstance(e.state.cSettings.generator)
+    val keyPairGen = elGamal.getKeyPairGenerator()
+    val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(e.state.publicKey)
+
+    preShuffle(e.state.votes.size, publicKey, e.state.cSettings, id)
+  }
+
+  def shuffleVotes(e: Election[_, Mixing[_]], preData: PreShuffleData, pdtoFuture: Future[PermutationProofDTO]) = {
+    println("Mixer..")
+    val elGamal = ElGamalEncryptionScheme.getInstance(e.state.cSettings.generator)
+    val keyPairGen = elGamal.getKeyPairGenerator()
+    val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(e.state.publicKey)
+    println("Convert votes..")
+
+    val votes = e.state match {
+      case s: Mixing[_0] => e.state.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
+      case _ => e.state.mixes.toList.last.votes.par.map( v => Util.getE(elGamal.getEncryptionSpace, v) ).seq
+    }
+
+    println("Mixer creating shuffle..")
+
+    shuffle(Util.tupleFromSeq(votes), publicKey, e.state.cSettings, id, preData, pdtoFuture)
   }
 }

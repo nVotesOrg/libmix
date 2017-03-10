@@ -9,12 +9,13 @@ Fork of agora-mixnet, the following changes have been made
 * Added gmp legendre for membership checks to unicrypt (jnagmp kronecker)
 * Converted CryptoTest to proper ScalaTest format (sbt test)
 * Rearranged packages
+* Separated demo code into its own package (some trustee code in Demo.scala)
 
 ### Work to do
 
-* Separate demo code into its own package
-* Fix the Util.getE mess
+* Rename Util.getE or remove it entirely (see comments at definition)
 * Remove Akka clustering and akka dependencies
 * Re add unicrypt parallelism optimizations (this is the big part)
 * Re add benchmarking scripts
 * Add demo following reactive protocol using local bb
+* Update to unicrypt latest version (Currently Nov 15)
