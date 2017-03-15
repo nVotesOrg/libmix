@@ -7,10 +7,12 @@ import java.math.BigInteger;
 import java.util.function.Supplier;
 import com.squareup.jnagmp.Gmp;
 
+import org.nvotes.mix.Util;
+
 public class MPBridge {
 
-	private static boolean useGmp = false;
-	private static boolean useExtractor = false;
+	private static boolean useGmp = Util.getEnvBoolean("USE_GMP");
+	private static boolean useExtractor = Util.getEnvBoolean("USE_EXTRACTOR");
 
 	private BigInteger dummy = new BigInteger("2");
 	private BigInteger modulus = null;

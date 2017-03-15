@@ -25,6 +25,11 @@ object Util {
   // val generatorParallelism = ConfigFactory.load().getInt("generators-parallelism-level")
   val generatorsParallel = true
   val generatorParallelism = 10
+  val useGmp = getEnvBoolean("USE_GMP")
+
+  def getEnvBoolean(variable: String) = {
+    sys.env.get(variable).getOrElse("false").toBoolean
+  }
 
   def tupleFromSeq(items: Seq[Element[_]]) = {
     Tuple.getInstance(items:_*)
@@ -110,7 +115,7 @@ object Util {
   }
 
   def legendreSymbol(a: BigInteger, p: BigInteger): Int = {
-    if(false) {
+    if(useGmp) {
       com.squareup.jnagmp.Gmp.kronecker(a, p)
     }
     else {
