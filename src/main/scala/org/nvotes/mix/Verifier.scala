@@ -97,7 +97,8 @@ object Verifier extends ProofSettings {
         MultiIdentityFunction.getInstance(Csettings.group.getZModOrder(), generatorFunctions.length),
         ProductFunction.getInstance(generatorFunctions :_*))
 
-    val pdElements = MPBridgeS.ex(pd.partialDecryptions.map(Csettings.group.asInstanceOf[AbstractSet[_,_]].getElementFrom(_)), "1")
+    // FIXME no need for extraction, using legendre symbol
+    val pdElements = pd.partialDecryptions.par.map(Csettings.group.asInstanceOf[AbstractSet[_,_]].getElementFrom(_)).seq
 
     val publicInput: Pair = Pair.getInstance(publicKey, Tuple.getInstance(pdElements:_*))
     val otherInput = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
@@ -105,7 +106,7 @@ object Verifier extends ProofSettings {
         Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
     val proofSystem: EqualityPreimageProofSystem = EqualityPreimageProofSystem.getInstance(challengeGenerator, f1, f2)
 
-    val commitment = MPBridgeS.ex(proofSystem.getCommitmentSpace().getElementFrom(pd.proofDTO.commitment), "1")
+    val commitment = proofSystem.getCommitmentSpace().getElementFrom(pd.proofDTO.commitment)
     val challenge = proofSystem.getChallengeSpace().getElementFrom(pd.proofDTO.challenge)
     val response = proofSystem.getResponseSpace().getElementFrom(pd.proofDTO.response)
 
@@ -139,12 +140,10 @@ object Verifier extends ProofSettings {
 
     val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(Csettings.group, votes.getArity())
 
-    // val permutationCommitment = MPBridgeS.ex(pcs.getCommitmentSpace().getElementFromString(shuffleProof.permutationCommitment), "1")
     val permutationCommitment = Util.fromString(pcs.getCommitmentSpace(), shuffleProof.permutationCommitment)
 
     println("Getting values..")
 
-    // val commitment1 = MPBridgeS.ex(pcps.getCommitmentSpace().getElementFromString(shuffleProof.permutationProof.commitment), "1")
     val commitment1 = Util.fromString(pcps.getCommitmentSpace(), shuffleProof.permutationProof.commitment)
     val challenge1 = pcps.getChallengeSpace.getElementFrom(shuffleProof.permutationProof.challenge)
     val response1 = pcps.getResponseSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.permutationProof.response)
@@ -166,10 +165,6 @@ object Verifier extends ProofSettings {
     val mixProofDTO = shuffleProof.mixProof
 
     println("Converting bridging commitments..")
-
-    /*val bridgingCommitments = MPBridgeS.ex(permutationProofDTO.bridgingCommitments.map { x =>
-      Csettings.group.getElementFromString(x)
-    }, "1")*/
 
     // bridging commitments: GStarmod
     val bridgingCommitments = permutationProofDTO.bridgingCommitments.par.map { x =>
