@@ -11,16 +11,14 @@ See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance
 
 ## Latest changes
 
-* Removed fiware
-* ~~Updated to unicrypt version 1c1dc26 (https://github.com/bfh-evg/unicrypt/commit/1c1dc260e000e4d868e929456d1c7703fd8a691a)~~
+* Updated to unicrypt 2.2-release (commit c6d3502100e4950e123326dcc5278265432f5a33)
+* Removed Akka clustering and akka dependencies
+* Removed shapeless dependency
 * Removed bypass-membership-checks code
 * Added gmp modpows to unicrypt (jnagmp)
 * Added gmp legendre for membership checks to unicrypt (jnagmp kronecker)
-* Converted CryptoTest to proper ScalaTest format (sbt test)
+* Converted CryptoTest to ScalaTest format (sbt test)
 * Rearranged packages
-* Removed Akka clustering and akka dependencies
-* Removed demo code and shapeless dependency
-* Updated to unicrypt to 2.2-release (commit c6d3502100e4950e123326dcc5278265432f5a33)
 * Added benchmark/demo
 
 ### Work to do
