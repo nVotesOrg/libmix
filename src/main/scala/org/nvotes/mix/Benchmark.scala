@@ -17,7 +17,7 @@ import org.nvotes.mix._
  */
 object Benchmark extends App {
 
-  val totalVotes = 10
+  val totalVotes = 1000
   val proverId1 = "auth1"
   val proverId2 = "auth2"
   val group = GStarModSafePrime.getFirstInstance(2048)
@@ -65,7 +65,7 @@ object Benchmark extends App {
   val oks2 = Verifier.verifyShuffle(Util.tupleFromSeq(votes1), Util.tupleFromSeq(votes2), mixTwo.shuffleProof,
     proverId2, publicKey, cSettings)
   if(!(oks1 && oks2)) {
-    throw new Exception("failed to verify shuffles $oks1 $oks2")
+    throw new Exception(s"failed to verify shuffles $oks1 $oks2")
   }
 
   val decryption1 = KeyMakerTrustee.partialDecryption(proverId1, mixTwo.votes, private1, cSettings)
@@ -147,7 +147,6 @@ object KeyMakerTrustee extends KeyMaker {
     partialDecrypt(v, secretKey, id, cSettings)
   }
 }
-
 
 /** Represents a shuffling trustee
  *

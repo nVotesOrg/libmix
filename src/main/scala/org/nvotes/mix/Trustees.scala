@@ -74,7 +74,7 @@ trait KeyMaker extends ProofSettings {
     val encryptionGenerator = Csettings.generator
 
     val secretKey = Csettings.group.getZModOrder().getElementFrom(privateKey.convertToBigInteger)
-    println(s"PartialDecrypt: keymaker using secretKey $secretKey")
+    // println(s"PartialDecrypt: keymaker using secretKey $secretKey")
     val decryptionKey = secretKey.invert()
     val publicKey = encryptionGenerator.selfApply(secretKey)
 
@@ -212,7 +212,7 @@ trait Mixer extends ProofSettings {
     val mixProof: Tuple = spg.generate(privateInputShuffle, publicInputShuffle)
     val eValues2: Tuple = spg.getEValues(mixProof).asInstanceOf[Tuple]
 
-    // FIXME conversion bug code
+    // FIXME remove trace (conversion bug code)
     // val commitment = spg.getCommitment(mixProof).convertToString
     // println(s"*** commitment $commitment")
     // spg.getCommitmentSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(commitment)

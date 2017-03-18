@@ -39,7 +39,7 @@ trait ModPowService {
 /******************** IMPLEMENTATION ********************/
 
 object MPService extends ModPowService {
-  val service = ParallelModPowService
+  val service = GmpParallelModPowService
 
   def compute(work: Array[ModPow]): Array[BigInteger] = service.compute(work)
   def compute(work: Array[ModPow2], mod: BigInteger): Array[BigInteger] = service.compute(work, mod)
@@ -99,6 +99,8 @@ object GmpParallelModPowService extends ModPowService {
   def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult] = {
     work.par.map(x => ModPowResult(x.base, x.pow, mod, Gmp.modPowInsecure(x.base, x.pow, mod))).seq.toArray
   }
+
+  def shutdown = {}
 }
 object ParallelModPowService extends ModPowService {
   def compute(work: Array[ModPow]): Array[BigInteger] = work.par.map(x => x.base.modPow(x.pow, x.mod)).seq.toArray

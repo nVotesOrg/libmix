@@ -16,16 +16,13 @@ import ch.bfh.unicrypt.helper.math.MathUtil
 import java.math.BigInteger
 import scala.collection.JavaConverters._
 
-/**
- * Some utilities
+/** Some utilities
+ *
  */
 object Util {
-  // FIXME
-  // val generatorsParallel = ConfigFactory.load().getBoolean("use-generators-parallel")
-  // val generatorParallelism = ConfigFactory.load().getInt("generators-parallelism-level")
-  val generatorsParallel = true
-  val generatorParallelism = 10
+
   val useGmp = getEnvBoolean("USE_GMP")
+  val generatorParallelism = 10
 
   def getEnvBoolean(variable: String) = {
     sys.env.get(variable).getOrElse("false").toBoolean
@@ -66,7 +63,6 @@ object Util {
     keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
   }
 
-
   /** Get an element from its string representation
    *
    *  This function exists because the scala compiler reports an ambiguity
@@ -84,7 +80,6 @@ object Util {
   }
 
   def getIndependentGenerators[E <: Element[_]](group: AbstractCyclicGroup[E, _], skip: Int, size: Int): java.util.List[E] = {
-
     val split = generatorParallelism
     val total = size + skip
 

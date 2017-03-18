@@ -147,11 +147,11 @@ object Verifier extends ProofSettings {
     val challenge1 = pcps.getChallengeSpace.getElementFrom(shuffleProof.permutationProof.challenge)
     val response1 = pcps.getResponseSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.permutationProof.response)
 
-    // FIXME remove trace
-    println(s"deserialize commitment ${shuffleProof.mixProof.commitment}")
-    println(s"commitmentspace ${spg.getCommitmentSpace}")
+    // FIXME remove trace (conversion bug code)
+    // println(s"deserialize commitment ${shuffleProof.mixProof.commitment}")
+    // println(s"commitmentspace ${spg.getCommitmentSpace}")
 
-    // FIXME remove trace
+    // FIXME remove  (conversion bug code)
     // AbstractSet.debug = true;
     val commitment2 = spg.getCommitmentSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.mixProof.commitment)
     // FIXME remove trace

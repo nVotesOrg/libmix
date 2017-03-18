@@ -119,7 +119,6 @@ public class MPBridge {
 			long now2 = System.currentTimeMillis();
 			BigInteger[] answers = MPService.compute(reqs, i().modulus);
 			long c = System.currentTimeMillis() - now2;
-
 			startReplay(answers);
 			ret = f.get();
 			long t = System.currentTimeMillis() - now;
