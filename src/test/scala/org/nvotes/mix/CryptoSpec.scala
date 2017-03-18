@@ -71,12 +71,12 @@ class CryptoSpec extends FlatSpec {
     ok = Verifier.verifyPartialDecryption(elementsTwo, ciphertexts, Csettings, "1", shares(1))
     assert(ok)
 
-    println(s"partial decrypts one ****\n$elementsOne")
-    println(s"partial decrypts two ****\n $elementsTwo")
+    // println(s"partial decrypts one ****\n$elementsOne")
+    // println(s"partial decrypts two ****\n $elementsTwo")
     // a^-x = a^-x1 * a^-x2 ...
     val combined = (elementsOne.partialDecryptions.map(Csettings.group.getElementFrom(_))
       zip elementsTwo.partialDecryptions.map(Csettings.group.getElementFrom(_))).map(c => c._1.apply(c._2))
-    println(s"a^-x ****\n$combined")
+    // println(s"a^-x ****\n$combined")
     // a^-x * b = m
     val decrypted = (ciphertexts zip combined).map(c => c._1.getSecond().apply(c._2))
     val encoder = ZModPrimeToGStarModSafePrime.getInstance(Csettings.group)

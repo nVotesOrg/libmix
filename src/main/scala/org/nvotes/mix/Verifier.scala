@@ -83,7 +83,7 @@ object Verifier extends ProofSettings {
     result
   }
 
-  def verifyPartialDecryption(pd: PartialDecryptionDTO, votes: Seq[Tuple], Csettings: CryptoSettings, proverId: String, publicKey: Element[_]) = {
+  def verifyPartialDecryption(pd: PartialDecryptionDTO, votes: Seq[Tuple], Csettings: CryptoSettings, proverId: String, publicShare: Element[_]) = {
 
     val encryptionGenerator = Csettings.generator
     val generatorFunctions = votes.par.map { x: Tuple =>
@@ -97,10 +97,9 @@ object Verifier extends ProofSettings {
         MultiIdentityFunction.getInstance(Csettings.group.getZModOrder(), generatorFunctions.length),
         ProductFunction.getInstance(generatorFunctions :_*))
 
-    // FIXME no need for extraction, using legendre symbol
     val pdElements = pd.partialDecryptions.par.map(Csettings.group.asInstanceOf[AbstractSet[_,_]].getElementFrom(_)).seq
 
-    val publicInput: Pair = Pair.getInstance(publicKey, Tuple.getInstance(pdElements:_*))
+    val publicInput: Pair = Pair.getInstance(publicShare, Tuple.getInstance(pdElements:_*))
     val otherInput = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
         Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
