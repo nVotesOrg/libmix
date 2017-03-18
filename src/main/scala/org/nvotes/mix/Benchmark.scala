@@ -1,14 +1,23 @@
-package org.nvotes.mix
+package org.nvotes.mix.benchmark
 
 import ch.bfh.unicrypt.crypto.schemes.encryption.classes.ElGamalEncryptionScheme
 import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 import ch.bfh.unicrypt.math.algebra.general.classes.Pair
 import ch.bfh.unicrypt.math.algebra.general.classes.Tuple
+import org.nvotes.mix._
 
+/**	Simulates a two authority election for benchmarking purposes
+ *
+ * 	The sequence is
+ *
+ *  Share generation, share pok verification, public key generation, vote casting
+ *  mixing, mix verification, decryption, decryption verification
+ *
+ */
 object Benchmark extends App {
 
-	val totalVotes = 100
+	val totalVotes = 10
 	val proverId1 = "auth1"
 	val proverId2 = "auth2"
 	val group = GStarModSafePrime.getFirstInstance(2048)
@@ -73,11 +82,15 @@ object Benchmark extends App {
   // combine decryptions
   val decrypted = combineDecryptions(decryptions, mixTwo.votes, cSettings)
 
-  println(plaintexts.sorted)
-  println(decrypted.map(_.toInt).sorted)
-  println(decrypted.map(_.toInt).sorted == plaintexts.sorted)
+  // println(plaintexts.sorted)
+  // println(decrypted.map(_.toInt).sorted)
+  println("Plaintexts match: " + (decrypted.map(_.toInt).sorted == plaintexts.sorted))
 
-
+  /**	Helper to combine decryptions and yield plaintexts.
+   *
+   *	Combines the decryptions, applies them to the ciphertexts and
+   *  finally decodes.
+   */
 	def combineDecryptions(decryptions: Seq[PartialDecryptionDTO], mixedVotes: Seq[String],
 		cSettings: CryptoSettings) = {
 
@@ -101,6 +114,11 @@ object Benchmark extends App {
 	}
 }
 
+/**	Represents a key maker trustee
+ *
+ * 	Methods to create shares and partially decrypt votes.
+ *  Mixes in the nMix KeyMaker trait.
+ */
 object KeyMakerTrustee extends KeyMaker {
 
   /**	Creates a key share

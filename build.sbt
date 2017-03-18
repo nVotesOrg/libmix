@@ -13,6 +13,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with agora-mixnet.  If not, see <http://www.gnu.org/licenses/>.
 
+name := "nMixlib"
+version := "0.2-SNAPSHOT"
+
 scalaVersion := "2.12.1"
 
 resolvers ++= Seq(

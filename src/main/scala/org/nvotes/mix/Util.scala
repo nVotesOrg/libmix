@@ -122,4 +122,12 @@ object Util {
       MathUtil.legendreSymbol(a, p)
     }
   }
+
+  def time[R](tag: String)(block: => R): R = {
+    val t0 = System.nanoTime()
+    val result = block
+    val t1 = System.nanoTime()
+    println(s"Elapsed time '$tag': " + ((t1 - t0) / 1000000000.0) + " s")
+    result
+  }
 }
