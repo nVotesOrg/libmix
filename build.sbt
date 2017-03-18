@@ -33,3 +33,4 @@ assemblyMergeStrategy in assembly := {
 
 scalacOptions ++= Seq("-feature", "-language:existentials", "-deprecation")
 javacOptions ++= Seq("-deprecation")
+javacOptions += "-Xlint:unchecked"

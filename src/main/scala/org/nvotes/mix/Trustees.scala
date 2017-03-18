@@ -28,7 +28,7 @@ import ch.bfh.unicrypt.math.function.classes.ProductFunction
 import ch.bfh.unicrypt.math.function.interfaces.Function
 
 import mpservice.MPBridgeS
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -176,8 +176,8 @@ trait Mixer extends ProofSettings {
       val permutationProofDTO = PermutationProofDTO(pcps.getCommitment(permutationProof).convertToString(),
         pcps.getChallenge(permutationProof).convertToString(),
         pcps.getResponse(permutationProof).convertToString(),
-        bridgingCommitments.par.map(x => x.convertToString).seq.toSeq,
-        eValues.par.map(x => x.convertToString).seq.toSeq)
+        bridgingCommitments.asScala.par.map(x => x.convertToString).seq.toSeq,
+        eValues.asScala.par.map(x => x.convertToString).seq.toSeq)
 
       permutationProofDTO
     }
@@ -210,7 +210,7 @@ trait Mixer extends ProofSettings {
 
     // shuffle proof
     val mixProof: Tuple = spg.generate(privateInputShuffle, publicInputShuffle)
-    val eValues2 = spg.getEValues(mixProof).asInstanceOf[Tuple]
+    val eValues2: Tuple = spg.getEValues(mixProof).asInstanceOf[Tuple]
 
     // FIXME conversion bug code
     // val commitment = spg.getCommitment(mixProof).convertToString
@@ -221,7 +221,7 @@ trait Mixer extends ProofSettings {
     val mixProofDTO = MixProofDTO(spg.getCommitment(mixProof).convertToString,
       spg.getChallenge(mixProof).convertToString,
       spg.getResponse(mixProof).convertToString,
-      eValues2.map(x => x.convertToString).toSeq)
+      eValues2.asScala.map(x => x.convertToString).toSeq)
 
     pdtoFuture.map { permutationProofDTO =>
       val shuffleProofDTO = ShuffleProofDTO(mixProofDTO, permutationProofDTO, pre.permutationCommitment.convertToString)
@@ -268,13 +268,13 @@ trait Mixer extends ProofSettings {
       pcps.generate(privateInputPermutation, publicInputPermutation)
     }.map { permutationProof =>
 
-      val bridgingCommitments = pcps.getBridingCommitment(permutationProof).asInstanceOf[Tuple].toList
+      val bridgingCommitments = pcps.getBridingCommitment(permutationProof).asInstanceOf[Tuple].asScala.toList
       val eValues = pcps.getEValues(permutationProof).asInstanceOf[Tuple]
       val permutationProofDTO = PermutationProofDTO(pcps.getCommitment(permutationProof).convertToString(),
         pcps.getChallenge(permutationProof).convertToString(),
         pcps.getResponse(permutationProof).convertToString(),
         bridgingCommitments.par.map(x => x.convertToString).seq.toSeq,
-        eValues.par.map(x => x.convertToString).seq.toSeq)
+        eValues.asScala.par.map(x => x.convertToString).seq.toSeq)
 
       permutationProofDTO
     }
@@ -311,13 +311,13 @@ trait Mixer extends ProofSettings {
     val mixProofDTO = MixProofDTO(spg.getCommitment(mixProof).convertToString(),
       spg.getChallenge(mixProof).convertToString(),
       spg.getResponse(mixProof).convertToString(),
-      eValues2.map(x => x.convertToString).toSeq)
+      eValues2.asScala.map(x => x.convertToString).toSeq)
 
     val permutationProofDTO = Await.result(permutationProofFuture, Duration.Inf)
 
     val shuffleProofDTO = ShuffleProofDTO(mixProofDTO, permutationProofDTO, permutationCommitment.convertToString)
 
-    val votesString: Seq[String] = shuffledVs.par.map( x => x.convertToString ).seq.toList
+    val votesString: Seq[String] = shuffledVs.asScala.par.map( x => x.convertToString ).seq.toList
 
     ShuffleResultDTO(shuffleProofDTO, votesString)
   }
