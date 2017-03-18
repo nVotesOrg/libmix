@@ -14,7 +14,7 @@ import ch.bfh.unicrypt.helper.random.deterministic.CTR_DRBG
 import ch.bfh.unicrypt.helper.random.deterministic.DeterministicRandomByteSequence
 import ch.bfh.unicrypt.helper.math.MathUtil
 import java.math.BigInteger
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
  * Some utilities
@@ -36,7 +36,7 @@ object Util {
   }
 
   def stringsFromTuple(tuple: Tuple): Seq[String] = {
-    tuple.par.map{ x => x.convertToString }.seq.toSeq
+    tuple.asScala.par.map{ x => x.convertToString }.seq.toSeq
   }
 
   def getRandomVotes(size: Int, generator: Element[_], publicKey: Element[_]) = {
@@ -106,12 +106,12 @@ object Util {
 
     val items = rds.par.flatMap { case (d, i) =>
       val sequence = group.getIndependentGenerators(d).limit(i)
-      sequence.toList
+      sequence.asScala.toList
     }
     println("getIndependentGenerators " + total + " " + items.size)
 
     // DenseArray.getInstance(items.drop(skip).toList.toArray)
-    items.drop(skip).toList
+    items.drop(skip).toList.asJava
   }
 
   def legendreSymbol(a: BigInteger, p: BigInteger): Int = {
