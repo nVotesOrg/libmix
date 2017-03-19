@@ -1,11 +1,10 @@
 package org.nvotes.mix
-// Note: See Election.scala for the election and election state models
 
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Element
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 
-/**
- * the group and generator for an election
+/** The group and generator for an election
+ *
  */
 case class CryptoSettings(group: GStarModSafePrime, generator: Element[_])
 

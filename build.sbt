@@ -36,9 +36,11 @@ assemblyMergeStrategy in assembly := {
 
 cancelable in Global := true
 fork in run := true
-envVars in run := Map("USE_GMP" -> "true",
-											"USE_EXTRACTOR" -> "true",
-											"USE_PARALLEL_GENERATORS" -> "true")
+envVars in run := Map(
+	"USE_GMP" -> "true",
+	"USE_EXTRACTOR" -> "true",
+	"USE_PARALLEL_GENERATORS" -> "true"
+)
 
 scalacOptions ++= Seq("-feature", "-language:existentials", "-deprecation")
 javacOptions ++= Seq("-deprecation")

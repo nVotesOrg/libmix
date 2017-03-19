@@ -12,6 +12,7 @@ See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance
 ## Latest changes
 
 * Updated to unicrypt 2.2-release (commit c6d3502100e4950e123326dcc5278265432f5a33)
+* Updated to Scala 2.12
 * Removed Akka clustering and akka dependencies
 * Removed shapeless dependency
 * Removed bypass-membership-checks code
@@ -20,7 +21,9 @@ See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance
 * Converted CryptoTest to ScalaTest format (sbt test)
 * Rearranged packages
 * Added benchmark/demo
+* Re add unicrypt parallelism optimizations (this is the big part)
 
 ### Work to do
 
-* Re add unicrypt parallelism optimizations (this is the big part)
+* Revise configuration mechanism
+* Proper tracing
