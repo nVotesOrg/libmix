@@ -21,9 +21,31 @@ See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance
 * Converted CryptoTest to ScalaTest format (sbt test)
 * Rearranged packages
 * Added benchmark/demo
-* Re add unicrypt parallelism optimizations (this is the big part)
+* Readded unicrypt parallelism optimizations
 
 ### Work to do
 
 * Revise configuration mechanism
 * Proper tracing
+* MPBridge clean up
+
+### Optimization switches
+
+The following environment variables may be set
+
+* USE_GMP=true/false
+
+Activates native implementation of modular exponentiation and legendre symbol via
+[jna-gmp](https://github.com/square/jna-gmp) and libgmp, if available on the system.
+
+* USE_EXTRACTOR=true/false
+
+Activates automatic extraction and parallelization of modular exponentiation calls.
+
+* USE_PARALLEL_GENERATORS=true/false
+
+Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
+
+### Randomness
+
+To speed up HybridRandomByteSequence under linux install rng-tools.
