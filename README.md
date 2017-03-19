@@ -6,6 +6,7 @@ A mixnet library built on top of [unicrypt](https://github.com/bfh-evg/univote2)
 * An automatic parallelization mechanism for modPow operations
 * A bridge to native Gmp operations for modPow and Legendre
 * Patches to the unicrypt library for optimisation (parallelism, native code)
+* A benchmark simulating the crypto for a full election cycle
 
 See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance numbers.
 
