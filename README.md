@@ -4,7 +4,7 @@ A mixnet library built on top of [unicrypt](https://github.com/bfh-evg/univote2)
 
 * A Scala interface to mixnet-based voting system building blocks
 * An automatic parallelization mechanism for modPow operations
-* A bridge to native Gmp operations for modPow and Legendre
+* A bridge to native gmp implementations for modPow and Legendre
 * Patches to the unicrypt library for optimisation (parallelism, native code)
 * A benchmark simulating the crypto for a full election cycle
 
@@ -37,7 +37,7 @@ The following environment variables may be set
 * USE_GMP=true/false
 
 Activates native implementation of modular exponentiation and legendre symbol via
-[jna-gmp](https://github.com/square/jna-gmp) and libgmp, if available on the system.
+[jna-gmp](https://github.com/square/jna-gmp) and gmp, if available on the system.
 
 * USE_EXTRACTOR=true/false
 
