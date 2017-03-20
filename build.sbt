@@ -24,8 +24,11 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "3.0.0" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.0" % "test",
+  "com.squareup.jnagmp" % "jnagmp" % "2.0.0" % "provided"
 )
+
+assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false, includeDependency = true)
 
 assemblyMergeStrategy in assembly := {
   case PathList("ch", "bfh", xs @ _*) => MergeStrategy.first

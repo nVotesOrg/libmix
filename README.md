@@ -10,7 +10,7 @@ A mixnet library built on top of [unicrypt](https://github.com/bfh-evg/univote2)
 
 See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance numbers.
 
-## Latest changes
+### Latest changes
 
 * Updated to unicrypt 2.2-release (commit c6d3502100e4950e123326dcc5278265432f5a33)
 * Updated to Scala 2.12
@@ -24,11 +24,16 @@ See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance
 * Added benchmark/demo
 * Readded unicrypt parallelism optimizations
 
-### Work to do
+### Packaging
 
-* Revise configuration mechanism
-* Proper tracing
-* MPBridge clean up
+Use the
+
+~~~~sbt assembly~~~~
+
+command to generate the project jar, in the target directory.
+
+This includes the nMixlib classes, the patched unicrypt classes and the original unicrypt
+library classes. It does not include the jna-gmp classes, which need to be provided at runtime.
 
 ### Optimization switches
 
@@ -50,3 +55,9 @@ Activates parallel computation of generators used in Terelius-Wikstrom proofs (e
 ### Randomness
 
 To speed up HybridRandomByteSequence under linux install rng-tools.
+
+### Work to do
+
+* Revise configuration mechanism
+* Proper tracing
+* MPBridge clean up

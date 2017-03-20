@@ -56,7 +56,6 @@ class CryptoSpec extends FlatSpec {
     ok = addShare(share2, "2", Csettings, key2)
     assert(ok)
 
-    println(s"Shares $shares")
     val publicKey = combineShares(shares, Csettings)
 
     val plaintexts = Seq.fill(10)(scala.util.Random.nextInt(10))
@@ -71,8 +70,6 @@ class CryptoSpec extends FlatSpec {
     ok = Verifier.verifyPartialDecryption(elementsTwo, ciphertexts, Csettings, "1", shares(1))
     assert(ok)
 
-    // println(s"partial decrypts one ****\n$elementsOne")
-    // println(s"partial decrypts two ****\n $elementsTwo")
     // a^-x = a^-x1 * a^-x2 ...
     val combined = (elementsOne.partialDecryptions.map(Csettings.group.getElementFrom(_))
       zip elementsTwo.partialDecryptions.map(Csettings.group.getElementFrom(_))).map(c => c._1.apply(c._2))
@@ -93,7 +90,6 @@ class CryptoSpec extends FlatSpec {
       encKey = encKey.apply(keyShare)
     }
 
-    println(s"combineShares: public key $encKey")
     encKey
   }
 
@@ -107,7 +103,6 @@ class CryptoSpec extends FlatSpec {
       val privateKey = keyPairGen.getPrivateKeySpace().getElementFrom(privateK)
 
       privates += privateKey
-      println(s"Share added $publicKey $privateKey")
     }
 
     result
