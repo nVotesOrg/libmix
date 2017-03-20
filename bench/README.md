@@ -39,9 +39,7 @@ mix times. You can plot the data with
 
     gnuplot plot.gpi
 
-which will show the data points as well as a linear fit whose gradient tells you seconds/vote. The graphs are output as png image files. Note that plot.gpi as written expects two runs and therefore two data columns in the data file. You will need to modify if you wish to compare more results.
-
-You probably want to modify run.sh and plot.gpi to configure your own runs and options, currently java modpow and gmp modpow runs are compared.
+which will show the data points as well as a linear fit whose gradient tells you seconds/vote. The graphs are output as png image files. Note that plot.gpi as written expects two runs and therefore two data columns in the data file. You will need to modify if you wish to compare more results.
 
 Use
 
