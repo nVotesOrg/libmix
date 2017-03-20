@@ -28,7 +28,7 @@ See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance
 
 Use the
 
-~~~~sbt assembly~~~~
+```sbt assembly```
 
 command to generate the project jar, in the target directory.
 
