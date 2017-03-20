@@ -25,7 +25,9 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-  "com.squareup.jnagmp" % "jnagmp" % "2.0.0" % "provided"
+  "com.squareup.jnagmp" % "jnagmp" % "2.0.0"
+  // use this line to build a jar with only nMix + unicrypt
+  // "com.squareup.jnagmp" % "jnagmp" % "2.0.0" % "provided"
 )
 
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false, includeDependency = true)
@@ -40,9 +42,9 @@ assemblyMergeStrategy in assembly := {
 cancelable in Global := true
 fork in run := true
 envVars in run := Map(
-	"USE_GMP" -> "true",
-	"USE_EXTRACTOR" -> "true",
-	"USE_PARALLEL_GENERATORS" -> "true"
+	"nmixlib.gmp" -> "true",
+	"nmixlib.extractor" -> "true",
+	"nmixlib.parallel-generators" -> "true"
 )
 
 scalacOptions ++= Seq("-feature", "-language:existentials", "-deprecation")

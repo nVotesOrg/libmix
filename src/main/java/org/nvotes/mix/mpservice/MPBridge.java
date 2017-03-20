@@ -11,8 +11,8 @@ import org.nvotes.mix.Util;
 
 public class MPBridge {
 
-	private static boolean useGmp = Util.getEnvBoolean("USE_GMP");
-	private static boolean useExtractor = Util.getEnvBoolean("USE_EXTRACTOR");
+	private static boolean useGmp = Util.getEnvBoolean("nmixlib.gmp");
+	private static boolean useExtractor = Util.getEnvBoolean("nmixlib.extractor");
 
 	private BigInteger dummy = new BigInteger("2");
 	private BigInteger modulus = null;
@@ -29,9 +29,7 @@ public class MPBridge {
         }
 	};
 
-	public static void init(boolean useGmp, boolean useExtractor) {
-		MPBridge.useGmp = useGmp;
-		MPBridge.useExtractor = useExtractor;
+	public static void init() {
 		System.out.println("***************************************************");
 		System.out.println("* MPBridge INIT");
 		System.out.println("*");

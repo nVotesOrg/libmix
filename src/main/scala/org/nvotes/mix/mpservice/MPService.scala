@@ -78,7 +78,7 @@ object MPBridgeS {
     ret
   }
 
-  def init(useGmp: Boolean, useExtractor: Boolean) = MPBridge.init(useGmp, useExtractor)
+  def init() = MPBridge.init()
   def shutdown = MPBridge.shutdown
 }
 

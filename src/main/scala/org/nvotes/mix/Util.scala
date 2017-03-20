@@ -21,11 +21,11 @@ import scala.collection.JavaConverters._
  */
 object Util {
 
-  val useGmp = getEnvBoolean("USE_GMP")
+  val useGmp = getEnvBoolean("nmixlib.gmp")
   val generatorParallelism = 10
 
   def getEnvBoolean(variable: String) = {
-    sys.env.get(variable).getOrElse("false").toBoolean
+    sys.props.get(variable).getOrElse("false").toBoolean
   }
 
   def tupleFromSeq(items: Seq[Element[_]]) = {

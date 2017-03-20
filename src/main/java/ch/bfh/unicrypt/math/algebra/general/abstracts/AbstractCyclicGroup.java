@@ -74,7 +74,7 @@ public abstract class AbstractCyclicGroup<E extends Element<V>, V>
 	   implements CyclicGroup<V> {
 
 	// drb
-	private static boolean generatorsParallel = Util$.MODULE$.getEnvBoolean("USE_PARALLEL_GENERATORS");
+	private static boolean generatorsParallel = Util$.MODULE$.getEnvBoolean("nmixlib.parallel-generators");
 
 	private static final long serialVersionUID = 1L;
 

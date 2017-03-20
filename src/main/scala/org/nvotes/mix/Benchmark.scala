@@ -17,7 +17,11 @@ import org.nvotes.mix._
  */
 object Benchmark extends App {
 
-  val totalVotes = 1000
+  val totalVotes = args(0).toInt
+
+  println(s"Starting run with $totalVotes votes...")
+  org.nvotes.mix.mpservice.MPBridge.init()
+
   val proverId1 = "auth1"
   val proverId2 = "auth2"
   val group = GStarModSafePrime.getFirstInstance(2048)
@@ -49,6 +53,8 @@ object Benchmark extends App {
 
   // encrypt the votes with the public key of the election
   val votes = Util.encryptVotes(plaintexts, cSettings, publicKey).map(_.convertToString)
+
+  val start = System.currentTimeMillis
 
   // shuffle
   val mixOne = MixerTrustee.shuffleVotes(votes, publicKeyString, proverId1, cSettings)
@@ -82,9 +88,14 @@ object Benchmark extends App {
   // combine decryptions
   val decrypted = combineDecryptions(decryptions, mixTwo.votes, cSettings)
 
+  val end = System.currentTimeMillis
+
   // println(plaintexts.sorted)
   // println(decrypted.map(_.toInt).sorted)
   println("Plaintexts match: " + (decrypted.map(_.toInt).sorted == plaintexts.sorted))
+
+  val time = ((end - start) / 1000.0)
+  println(s"time: $time")
 
   /** Helper to combine decryptions and yield plaintexts.
    *

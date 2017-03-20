@@ -33,7 +33,7 @@ Use the
 command to generate the project jar, in the target directory.
 
 This includes the nMixlib classes, the patched unicrypt classes and the original unicrypt
-library classes. It does not include the jna-gmp classes, which need to be provided at runtime.
+library classes. It also includes the jna-gmp classes, needed for native gmp code.
 
 ### Optimization switches
 
