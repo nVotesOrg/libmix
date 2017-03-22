@@ -57,7 +57,6 @@ trait ProofSettings {
 object Verifier extends ProofSettings {
 
   def verifyKeyShare(share: EncryptionKeyShareDTO, Csettings: CryptoSettings, proverId: String) = {
-    println("Verifier: verifyKeyShare......")
 
     val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
     val keyPairGen: KeyPairGenerator = elGamal.getKeyPairGenerator();

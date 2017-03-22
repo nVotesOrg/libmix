@@ -39,9 +39,8 @@ object Util {
   def getRandomVotes(size: Int, generator: Element[_], publicKey: Element[_]) = {
     val elGamal = ElGamalEncryptionScheme.getInstance(generator)
 
-    (1 to size).map { _ =>
+    (1 to size).par.map { _ =>
       val element = elGamal.getMessageSpace().getRandomElement()
-      println(s"* plaintext $element")
       elGamal.encrypt(publicKey, element)
     }
   }

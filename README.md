@@ -10,6 +10,8 @@ A mixnet library built on top of [unicrypt](https://github.com/bfh-evg/univote2)
 
 See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance numbers.
 
+m4-16, 100k votes: time: 1676.304
+
 ### Latest changes
 
 * Updated to unicrypt 2.2-release (commit c6d3502100e4950e123326dcc5278265432f5a33)

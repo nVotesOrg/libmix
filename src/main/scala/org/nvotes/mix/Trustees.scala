@@ -190,11 +190,9 @@ trait Mixer extends ProofSettings {
   // online phase of the proof of shuffle, requires preshuffle data from offline phase
   def shuffle(ciphertexts: Tuple, publicKey: Element[_], Csettings: CryptoSettings, proverId: String, pre: PreShuffleData, pdtoFuture: Future[PermutationProofDTO]) = {
 
-    println("Mixer: randomizations..")
+    println("Mixer: shuffle..")
 
     val rs: Tuple = pre.mixer.generateRandomizations()
-
-    println("Mixer: shuffle..")
 
     // shuffle
     val shuffledVs: Tuple = pre.mixer.shuffle(ciphertexts, pre.psi, rs)
