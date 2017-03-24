@@ -1,4 +1,4 @@
-// drb MPBridge.ex and generators
+// drb MPBridge.ex and generators and bad loop trace
 /*
  * UniCrypt
  *
@@ -228,10 +228,14 @@ public class PermutationCommitmentProofSystem
 			return 0;
 		}, "2");
 
+
+		System.out.println("Cannot parallelize..");
+		long now = System.currentTimeMillis();
 		for (int i = 0; i < this.size; i++) {
 			Element c_i_1 = i == 0 ? h : cs[i - 1];
 			cs[i] = temp[i].apply(c_i_1.selfApply(ePrimeV.getAt(i)));  //   [2n]
 		}
+		System.out.println("Bad loop: [" + ((System.currentTimeMillis() - now) / 1000.0) + " ms]");
 
 		final Tuple cV = Tuple.getInstance(cs);
 		final Element d = ds[ds.length - 1];
