@@ -21,7 +21,7 @@ import scala.collection.JavaConverters._
  */
 object Util {
 
-  val useGmp = getEnvBoolean("nmixlib.gmp")
+  val useGmp = getEnvBoolean("libmix.gmp")
   val generatorParallelism = 10
 
   def getEnvBoolean(variable: String) = {
