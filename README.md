@@ -1,4 +1,4 @@
-# nMixlib
+# libmix
 
 A mixnet library built on top of [unicrypt](https://github.com/bfh-evg/univote2) and the [univote](https://github.com/bfh-evg/univote2) design. Provides
 
