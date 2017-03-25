@@ -41,16 +41,16 @@ library classes. It also includes the jna-gmp classes, needed for native gmp cod
 
 The following environment variables may be set
 
-* USE_GMP=true/false
+* libmix.gmp=true/false
 
 Activates native implementation of modular exponentiation and legendre symbol via
 [jna-gmp](https://github.com/square/jna-gmp) and gmp, if available on the system.
 
-* USE_EXTRACTOR=true/false
+* libmix.extractor=true/false
 
 Activates automatic extraction and parallelization of modular exponentiation calls.
 
-* USE_PARALLEL_GENERATORS=true/false
+* libmix.parallel-generators=true/false
 
 Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
 
