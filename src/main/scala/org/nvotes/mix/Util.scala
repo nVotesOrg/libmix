@@ -45,6 +45,15 @@ object Util {
     }
   }
 
+  def getRandomVotesStr(size: Int, generator: Element[_], publicKey: Element[_]) = {
+    val elGamal = ElGamalEncryptionScheme.getInstance(generator)
+
+    (1 to size).par.map { _ =>
+      val element = elGamal.getMessageSpace().getRandomElement()
+      elGamal.encrypt(publicKey, element).convertToString
+    }
+  }
+
   def encryptVotes(plaintexts: Seq[Int], cSettings: CryptoSettings, publicKey: Element[_]) = {
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val encoder = ZModPrimeToGStarModSafePrime.getInstance(cSettings.group)
