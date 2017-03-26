@@ -1,11 +1,11 @@
-package org.nvotes.mix.benchmark
+package org.nvotes.libmix.benchmark
 
 import ch.bfh.unicrypt.crypto.schemes.encryption.classes.ElGamalEncryptionScheme
 import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 import ch.bfh.unicrypt.math.algebra.general.classes.Pair
 import ch.bfh.unicrypt.math.algebra.general.classes.Tuple
-import org.nvotes.mix._
+import org.nvotes.libmix._
 
 /** Simulates a two authority election for benchmarking purposes
  *
@@ -20,7 +20,6 @@ object Benchmark extends App {
   val totalVotes = args(0).toInt
 
   println(s"Starting run with $totalVotes votes...")
-  org.nvotes.mix.mpservice.MPBridge.init()
 
   val proverId1 = "auth1"
   val proverId2 = "auth2"

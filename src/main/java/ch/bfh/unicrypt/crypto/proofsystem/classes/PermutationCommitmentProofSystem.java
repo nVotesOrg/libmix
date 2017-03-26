@@ -72,7 +72,7 @@ import ch.bfh.unicrypt.math.function.classes.ProductFunction;
 
 // drb
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractCyclicGroup;
-import org.nvotes.mix.mpservice.MPBridge;
+import org.nvotes.libmix.mpservice.MPBridge;
 
 //
 // @see [TW10] Protocol 1: Permutation Matrix

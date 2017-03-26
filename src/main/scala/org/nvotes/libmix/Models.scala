@@ -1,4 +1,4 @@
-package org.nvotes.mix
+package org.nvotes.libmix
 
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Element
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime

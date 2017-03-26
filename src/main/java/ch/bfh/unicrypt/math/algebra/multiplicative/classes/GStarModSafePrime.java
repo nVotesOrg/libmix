@@ -1,3 +1,4 @@
+// drb legendre
 /*
  * UniCrypt
  *
@@ -74,7 +75,7 @@ public class GStarModSafePrime
 		return value.signum() > 0
 			   && value.compareTo(this.modulus) < 0
 			   // drb
-			   && org.nvotes.mix.Util.legendreSymbol(value, this.modulus) == 1;
+			   && org.nvotes.libmix.Util.legendreSymbol(value, this.modulus) == 1;
 			   // && MathUtil.legendreSymbol(value, this.modulus) == 1;
 	}
 

@@ -1,4 +1,4 @@
-package org.nvotes.mix.mpservice;
+package org.nvotes.libmix.mpservice;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.util.function.Supplier;
 import com.squareup.jnagmp.Gmp;
 
-import org.nvotes.mix.Util;
+import org.nvotes.libmix.Util;
 
 public class MPBridge {
 
@@ -110,7 +110,7 @@ public class MPBridge {
 	 	long now = System.currentTimeMillis();
 	 	T ret = f.get();
 	 	long r = System.currentTimeMillis() - now;
-	 	System.out.println("R: [" + r + " ms]");
+	 	System.out.println("Record: [" + r + " ms]");
 	 	ModPow2[] reqs = stopRecord();
 		b(3);
 		if(reqs.length > 0) {
@@ -120,7 +120,7 @@ public class MPBridge {
 			startReplay(answers);
 			ret = f.get();
 			long t = System.currentTimeMillis() - now;
-			System.out.println("\nC: [" + c + " ms] T: [" + t + " ms] R+C: [" + (r+c) + " ms]");
+			System.out.println("Compute: [" + c + " ms] R+C: [" + (r+c) + " ms] Total: [" + t + " ms]");
 			stopReplay();
 		}
 		reset();

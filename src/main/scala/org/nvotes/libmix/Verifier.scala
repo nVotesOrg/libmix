@@ -1,4 +1,4 @@
-package org.nvotes.mix
+package org.nvotes.libmix
 
 import java.nio.ByteOrder
 import java.nio.charset.Charset

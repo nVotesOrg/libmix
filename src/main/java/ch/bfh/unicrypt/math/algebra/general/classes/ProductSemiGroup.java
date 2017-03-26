@@ -54,7 +54,7 @@ import ch.bfh.unicrypt.math.algebra.general.interfaces.SemiGroup;
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Set;
 import java.math.BigInteger;
 
-import org.nvotes.mix.mpservice.MPBridge;
+import org.nvotes.libmix.mpservice.MPBridge;
 
 /**
  *

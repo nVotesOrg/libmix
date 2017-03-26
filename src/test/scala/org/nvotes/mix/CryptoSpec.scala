@@ -1,4 +1,4 @@
-package org.nvotes.mix
+package org.nvotes.libmix
 
 import ch.bfh.unicrypt.crypto.keygenerator.interfaces.KeyPairGenerator
 import ch.bfh.unicrypt.crypto.schemes.encryption.classes.ElGamalEncryptionScheme

@@ -58,7 +58,7 @@ import ch.bfh.unicrypt.math.function.abstracts.AbstractFunction;
 import ch.bfh.unicrypt.math.function.interfaces.Function;
 
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractCyclicGroup;
-import org.nvotes.mix.mpservice.MPBridge;
+import org.nvotes.libmix.mpservice.MPBridge;
 
 //
 // @author R. Haenni

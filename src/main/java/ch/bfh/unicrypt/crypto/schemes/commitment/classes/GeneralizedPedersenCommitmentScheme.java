@@ -56,7 +56,7 @@ import ch.bfh.unicrypt.math.function.classes.GeneratorFunction;
 import ch.bfh.unicrypt.math.function.classes.ProductFunction;
 import ch.bfh.unicrypt.math.function.interfaces.Function;
 
-import org.nvotes.mix.mpservice.MPBridge;
+import org.nvotes.libmix.mpservice.MPBridge;
 
 public class GeneralizedPedersenCommitmentScheme
 	   extends AbstractRandomizedCommitmentScheme<ProductGroup, Tuple, CyclicGroup, Element, ZMod> {

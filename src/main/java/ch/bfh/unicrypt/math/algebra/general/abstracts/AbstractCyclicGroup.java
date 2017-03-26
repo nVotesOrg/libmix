@@ -56,7 +56,7 @@ import ch.bfh.unicrypt.math.algebra.general.interfaces.Element;
 import ch.bfh.unicrypt.helper.array.classes.DenseArray;
 
 // drb
-import org.nvotes.mix.Util$;
+import org.nvotes.libmix.Util$;
 
 /**
  * This abstract class provides a base implementation for the interface {@link CyclicGroup}.

@@ -54,7 +54,7 @@ import ch.bfh.unicrypt.math.algebra.general.interfaces.Set;
 import ch.bfh.unicrypt.math.function.classes.PermutationFunction;
 import ch.bfh.unicrypt.math.function.interfaces.Function;
 
-import org.nvotes.mix.mpservice.MPBridge;
+import org.nvotes.libmix.mpservice.MPBridge;
 
 /**
  *

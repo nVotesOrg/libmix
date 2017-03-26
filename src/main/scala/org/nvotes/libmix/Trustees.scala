@@ -1,4 +1,4 @@
-package org.nvotes.mix
+package org.nvotes.libmix
 
 import ch.bfh.unicrypt.crypto.mixer.classes.ReEncryptionMixer
 import ch.bfh.unicrypt.crypto.proofsystem.challengegenerator.classes.FiatShamirSigmaChallengeGenerator

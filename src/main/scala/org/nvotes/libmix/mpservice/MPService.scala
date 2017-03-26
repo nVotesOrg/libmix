@@ -1,4 +1,4 @@
-package org.nvotes.mix.mpservice
+package org.nvotes.libmix.mpservice
 
 import scala.concurrent.duration.DurationInt
 import java.math.BigInteger
@@ -51,8 +51,6 @@ object MPService extends ModPowService {
 }
 
 object MPBridgeS {
-  // FIXME move to Util
-  // val generatorParallelism = ConfigFactory.load().getInt("generators-parallelism-level")
 
   def ex[T](f: => T, v: String) = {
     MPBridge.a()
@@ -60,7 +58,7 @@ object MPBridgeS {
     val now = System.currentTimeMillis
     var ret = f
     val r = System.currentTimeMillis - now
-    println(s"R: [$r ms]")
+    println(s"Record: [$r ms]")
     val requests = MPBridge.stopRecord()
     MPBridge.b(3)
     if(requests.length > 0) {
@@ -70,7 +68,7 @@ object MPBridgeS {
         MPBridge.startReplay(answers)
         ret = f
         val t = System.currentTimeMillis - now
-        println(s"\nC: [$c ms] T: [$t ms] R+C: [${r+c} ms]")
+        println(s"Compute: [$c ms] R+C: [${r+c} ms] Total: [$t ms]")
         MPBridge.stopReplay()
     }
     MPBridge.reset()

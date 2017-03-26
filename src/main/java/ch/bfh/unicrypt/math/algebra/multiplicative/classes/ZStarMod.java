@@ -1,3 +1,4 @@
+// drb modpow
 /*
  * UniCrypt
  *
@@ -127,7 +128,7 @@ public class ZStarMod
 	protected ZStarModElement defaultSelfApplyAlgorithm(final ZStarModElement element, final BigInteger posExponent) {
 		// return this.abstractGetElement(element.getValue().modPow(posExponent, this.modulus));
 		// drb
-		return this.abstractGetElement(org.nvotes.mix.mpservice.MPBridge.modPow(element.getValue(), posExponent, this.modulus));
+		return this.abstractGetElement(org.nvotes.libmix.mpservice.MPBridge.modPow(element.getValue(), posExponent, this.modulus));
 	}
 
 	@Override
