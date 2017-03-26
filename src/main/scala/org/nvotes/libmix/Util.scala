@@ -49,8 +49,7 @@ object Util {
     val elGamal = ElGamalEncryptionScheme.getInstance(generator)
 
     (1 to size).par.map { _ =>
-      val element = elGamal.getMessageSpace().getRandomElement()
-      elGamal.encrypt(publicKey, element).convertToString
+      elGamal.getEncryptionSpace().getRandomElement().convertToString
     }
   }
 
