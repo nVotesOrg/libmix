@@ -94,7 +94,7 @@ object Benchmark extends App {
   println("Plaintexts match: " + (decrypted.map(_.toInt).sorted == plaintexts.sorted))
 
   val time = ((end - start) / 1000.0)
-  println(s"time: $time")
+  println(s"time: $time ($totalVotes)")
 
   /** Helper to combine decryptions and yield plaintexts.
    *

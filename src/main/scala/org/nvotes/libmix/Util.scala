@@ -105,13 +105,12 @@ object Util {
       val r = DeterministicRandomByteSequence.getInstance(CTR_DRBG.getFactory(), converter.reconvert(seed))
       (r, value)
     }
-    // rds.foreach(println)
 
     val items = rds.par.flatMap { case (d, i) =>
       val sequence = group.getIndependentGenerators(d).limit(i)
       sequence.asScala.toList
     }
-    println("getIndependentGenerators " + total + " " + items.size)
+    // println("GetIndependentGenerators " + total + " " + items.size)
 
     // DenseArray.getInstance(items.drop(skip).toList.toArray)
     items.drop(skip).toList.asJava

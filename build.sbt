@@ -30,6 +30,7 @@ libraryDependencies ++= Seq(
   // "com.squareup.jnagmp" % "jnagmp" % "2.0.0" % "provided"
 )
 
+test in assembly := {}
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false, includeDependency = true)
 
 assemblyMergeStrategy in assembly := {
@@ -49,4 +50,5 @@ envVars in run := Map(
 
 scalacOptions ++= Seq("-feature", "-language:existentials", "-deprecation")
 javacOptions ++= Seq("-deprecation")
+scalacOptions += "-opt:l:classpath"
 // javacOptions += "-Xlint:unchecked"
