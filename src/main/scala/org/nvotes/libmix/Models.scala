@@ -19,6 +19,8 @@ case class EncryptionKeyShareDTO(sigmaProofDTO: SigmaProofDTO, keyShare: String)
 case class PartialDecryptionDTO(partialDecryptions: Seq[String], proofDTO: SigmaProofDTO)
 case class SigmaProofDTO(commitment: String, challenge: String, response: String)
 
+case class PreShuffleData(permutation: String, randomizations: String)
+
 case class ShuffleResultDTO(shuffleProof: ShuffleProofDTO, votes: Seq[String])
 case class PermutationProofDTO(commitment: String, challenge: String, response: String,
   bridgingCommitments: Seq[String], eValues: Seq[String])

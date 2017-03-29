@@ -33,8 +33,6 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-case class PreShuffleData(permutationElementString: String, permutationCommitmentRandomizationsString: String)
-
 /**
  * Functions needed for a keymaker trustee
  *
@@ -95,8 +93,8 @@ trait KeyMaker extends ProofSettings {
     PartialDecryptionDTO(lists._1.par.map(_.convertToString).seq, proofDTO)
   }
 
-  private def createProof(proverId: String, secretKey: Element[_],
-      publicKey: Element[_], partialDecryptions: Seq[Element[_]], generatorFunctions: Seq[Function], Csettings: CryptoSettings) = {
+  private def createProof(proverId: String, secretKey: Element[_], publicKey: Element[_],
+    partialDecryptions: Seq[Element[_]], generatorFunctions: Seq[Function], Csettings: CryptoSettings) = {
 
     val encryptionGenerator = Csettings.generator
 
@@ -177,7 +175,7 @@ trait Mixer extends ProofSettings {
 
     val preShuffleData = PreShuffleData(psi.convertToString, permutationCommitmentRandomizations.convertToString)
 
-    (preShuffleData, permutationProofDTO)
+    (permutationProofDTO, preShuffleData)
   }
 
   // online phase of the proof of shuffle, requires preshuffle data from offline phase
@@ -188,7 +186,7 @@ trait Mixer extends ProofSettings {
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val mixer: ReEncryptionMixer = ReEncryptionMixer.getInstance(elGamal, publicKey, ciphertexts.getArity)
     val rs: Tuple = mixer.generateRandomizations()
-    val psi: PermutationElement = mixer.getPermutationGroup().getElementFrom(pre.permutationElementString)
+    val psi: PermutationElement = mixer.getPermutationGroup().getElementFrom(pre.permutation)
 
     // shuffle
     val shuffledVs: Tuple = mixer.shuffle(ciphertexts, psi, rs)
@@ -206,7 +204,7 @@ trait Mixer extends ProofSettings {
 
     val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(cSettings.group, ciphertexts.getArity)
 
-    val permutationCommitmentRandomizations: Tuple = Util.fromString(pcs.getRandomizationSpace(), pre.permutationCommitmentRandomizationsString).asInstanceOf[Tuple]
+    val permutationCommitmentRandomizations: Tuple = Util.fromString(pcs.getRandomizationSpace(), pre.randomizations).asInstanceOf[Tuple]
 
     val permutationCommitment: Tuple = pcs.commit(psi, permutationCommitmentRandomizations)
 

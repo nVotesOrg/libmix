@@ -57,6 +57,7 @@ object Benchmark extends App {
   // encrypt the votes with the public key of the election
   val votes = Util.encryptVotes(plaintexts, cSettings, publicKey).map(_.convertToString)
 
+  // if a second argument is passed we do the offline phase separately and simulate parallelism
   var mixOne: ShuffleResultDTO = null
   var mixTwo: ShuffleResultDTO = null
   var start = 0L
@@ -71,12 +72,14 @@ object Benchmark extends App {
   else {
     println("timing parallel offline + online")
 
-    // pre-shuffle
-    val (preData1,pdto1) = MixerTrustee.preShuffleVotes(votes, publicKeyString, proverId1, cSettings)
-    start = System.currentTimeMillis
-    val (preData2,pdto2) = MixerTrustee.preShuffleVotes(votes, publicKeyString, proverId2, cSettings)
+    // offline phase
+    val (pdto1, preData1) = MixerTrustee.preShuffleVotes(votes, publicKeyString, proverId1, cSettings)
 
-    // online shuffle
+    // if the offline phase were executed in parallel, it only adds up the time for one authority
+    start = System.currentTimeMillis
+    val (pdto2, preData2) = MixerTrustee.preShuffleVotes(votes, publicKeyString, proverId2, cSettings)
+
+    // online phase
     mixOne = MixerTrustee.shuffleVotes(votes, preData1, pdto1, publicKeyString, proverId1, cSettings)
     mixTwo = MixerTrustee.shuffleVotes(mixOne.votes, preData2, pdto2, publicKeyString, proverId2, cSettings)
   }
@@ -187,12 +190,11 @@ object MixerTrustee extends Mixer {
 
   /** Shuffle the provided votes
    *
-   *  Returns the shuffle and proof of knowledgeas an nMix ShuffleResultDTO
+   *  Returns the shuffle and proof of knowledge as a ShuffleResultDTO
    */
   def shuffleVotes(votes: Seq[String], publicKey: String, id: String, cSettings: CryptoSettings): ShuffleResultDTO = {
     println("Mixer shuffle..")
 
-    // not using Util.getPublicKeyFromString since we need the scheme below
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
     val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
