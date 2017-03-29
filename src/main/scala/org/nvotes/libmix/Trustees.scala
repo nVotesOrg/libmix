@@ -27,6 +27,9 @@ import ch.bfh.unicrypt.math.function.classes.MultiIdentityFunction
 import ch.bfh.unicrypt.math.function.classes.ProductFunction
 import ch.bfh.unicrypt.math.function.interfaces.Function
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import mpservice.MPBridgeS
 import scala.collection.JavaConverters._
 import scala.concurrent._
@@ -39,6 +42,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
  * Creation of key shares and partial decryptions, along with necessary proofs and verification
  */
 trait KeyMaker extends ProofSettings {
+
+  val logger = LoggerFactory.getLogger(getClass)
 
   def createShare(proverId: String, Csettings: CryptoSettings) = {
 
@@ -70,7 +75,7 @@ trait KeyMaker extends ProofSettings {
     val encryptionGenerator = Csettings.generator
 
     val secretKey = Csettings.group.getZModOrder().getElementFrom(privateKey.convertToBigInteger)
-    // println(s"PartialDecrypt: keymaker using secretKey $secretKey")
+    // logger.info(s"PartialDecrypt: keymaker using secretKey $secretKey")
     val decryptionKey = secretKey.invert()
     val publicKey = encryptionGenerator.selfApply(secretKey)
 
@@ -78,11 +83,12 @@ trait KeyMaker extends ProofSettings {
       val element = v.getFirst()
       // ask Rolf about this
       if(element.convertToString == "1") {
-        println("********** Crash incoming!")
+        logger.info("********** Crash incoming!")
       }
 
       GeneratorFunction.getInstance(element)
     }.seq
+
     val lists = MPBridgeS.ex(generators.map{ generator =>
       val partialDecryption = generator.apply(decryptionKey).asInstanceOf[GStarModElement]
       (partialDecryption, generator)
@@ -129,6 +135,9 @@ trait KeyMaker extends ProofSettings {
  */
 trait Mixer extends ProofSettings {
 
+  val logger = LoggerFactory.getLogger(getClass)
+
+
   // corresponds to the offline phase of the proof of shuffle (permutation for known number of votes)
   def preShuffle(voteCount: Int, publicKey: Element[_], Csettings: CryptoSettings, proverId: String) = {
 
@@ -142,7 +151,7 @@ trait Mixer extends ProofSettings {
 
     val permutationCommitment: Tuple = pcs.commit(psi, permutationCommitmentRandomizations)
 
-    println("Mixer: generators..")
+    logger.info("Mixer: generators..")
 
     // sigma challenge generator
     val otherInput: StringElement = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
@@ -153,7 +162,7 @@ trait Mixer extends ProofSettings {
     val ecg: ChallengeGenerator = PermutationCommitmentProofSystem.createNonInteractiveEValuesGenerator(
         Csettings.group.getZModOrder(), voteCount)
 
-    println("Mixer: permutation proof..")
+    logger.info("Mixer: permutation proof..")
 
     val pcps: PermutationCommitmentProofSystem = PermutationCommitmentProofSystem.getInstance(challengeGenerator, ecg,
         Csettings.group, voteCount)
@@ -161,7 +170,7 @@ trait Mixer extends ProofSettings {
     val privateInputPermutation: Pair = Pair.getInstance(psi, permutationCommitmentRandomizations)
     val publicInputPermutation = permutationCommitment
 
-    println("Mixer: permutation proof, generating..")
+    logger.info("Mixer: permutation proof, generating..")
 
     val permutationProof = pcps.generate(privateInputPermutation, publicInputPermutation)
 
@@ -182,7 +191,7 @@ trait Mixer extends ProofSettings {
   def shuffle(ciphertexts: Tuple, pre: PreShuffleData, pdto: PermutationProofDTO,
     publicKey: Element[_], cSettings: CryptoSettings, proverId: String) = {
 
-    println("Mixer: shuffle..")
+    logger.info("Mixer: shuffle..")
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val mixer: ReEncryptionMixer = ReEncryptionMixer.getInstance(elGamal, publicKey, ciphertexts.getArity)
     val rs: Tuple = mixer.generateRandomizations()
@@ -191,7 +200,7 @@ trait Mixer extends ProofSettings {
     // shuffle
     val shuffledVs: Tuple = mixer.shuffle(ciphertexts, psi, rs)
 
-    println("Mixer: shuffle proof..")
+    logger.info("Mixer: shuffle proof..")
 
     val otherInput: StringElement = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
@@ -211,15 +220,16 @@ trait Mixer extends ProofSettings {
     val privateInputShuffle: Tuple = Tuple.getInstance(psi, permutationCommitmentRandomizations, rs)
     val publicInputShuffle: Tuple = Tuple.getInstance(permutationCommitment, ciphertexts, shuffledVs)
 
-    println("Mixer: shuffle proof, generating..")
+    logger.info("Mixer: shuffle proof, generating..")
 
     // shuffle proof
     val mixProof: Tuple = spg.generate(privateInputShuffle, publicInputShuffle)
     val eValues2: Tuple = spg.getEValues(mixProof).asInstanceOf[Tuple]
 
+    logger.info(s"Mixer: evalues2 size: ${eValues2.getArity}")
     // FIXME remove trace (conversion bug code)
     // val commitment = spg.getCommitment(mixProof).convertToString
-    // println(s"*** commitment $commitment")
+    // logger.info(s"*** commitment $commitment")
     // spg.getCommitmentSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(commitment)
 
     // FIXME whether or not using parallel collection on eValues2.map here is good
@@ -249,7 +259,7 @@ trait Mixer extends ProofSettings {
 
     val permutationCommitment: Tuple = pcs.commit(psi, permutationCommitmentRandomizations)
 
-    println("Mixer: generators..")
+    logger.info("Mixer: generators..")
 
     // sigma challenge generator
     val otherInput: StringElement = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
@@ -266,7 +276,7 @@ trait Mixer extends ProofSettings {
     val privateInputPermutation: Pair = Pair.getInstance(psi, permutationCommitmentRandomizations)
     val publicInputPermutation = permutationCommitment
 
-    println("Mixer: permutation proof, generating..")
+    logger.info("Mixer: permutation proof, generating..")
 
     val permutationProofFuture = Future {
       pcps.generate(privateInputPermutation, publicInputPermutation)
@@ -283,16 +293,16 @@ trait Mixer extends ProofSettings {
       permutationProofDTO
     }
 
-    println("Mixer: randomizations..")
+    logger.info("Mixer: randomizations..")
 
     val rs: Tuple = mixer.generateRandomizations()
 
-    println("Mixer: shuffle..")
+    logger.info("Mixer: shuffle..")
 
     // shuffle
     val shuffledVs: Tuple = mixer.shuffle(ciphertexts, psi, rs)
 
-    println("Mixer: shuffle proof..")
+    logger.info("Mixer: shuffle proof..")
 
     // shuffle proof system
     val spg: ReEncryptionShuffleProofSystem = ReEncryptionShuffleProofSystem.getInstance(challengeGenerator, ecg, ciphertexts.getArity(), elGamal, publicKey)
@@ -300,7 +310,7 @@ trait Mixer extends ProofSettings {
     val privateInputShuffle: Tuple = Tuple.getInstance(psi, permutationCommitmentRandomizations, rs)
     val publicInputShuffle: Tuple = Tuple.getInstance(permutationCommitment, ciphertexts, shuffledVs)
 
-    println("Mixer: shuffle proof, generating..")
+    logger.info("Mixer: shuffle proof, generating..")
 
     // shuffle proof
     val mixProof: Tuple = spg.generate(privateInputShuffle, publicInputShuffle)
@@ -308,7 +318,7 @@ trait Mixer extends ProofSettings {
 
     // FIXME conversion bug code
     // val commitment = spg.getCommitment(mixProof).convertToString
-    // println(s"*** commitment $commitment")
+    // logger.info(s"*** commitment $commitment")
     // spg.getCommitmentSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(commitment)
 
     // FIXME whether or not using parallel collection on eValues2.map here is good

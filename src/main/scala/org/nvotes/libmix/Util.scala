@@ -99,7 +99,7 @@ object Util {
     val rds = c.zipWithIndex.map{ case (value, index) =>
       // 1000: we want to leave room for generators not to overlap
       val seed = java.math.BigInteger.valueOf(index * (total / split) * 1000).mod(MathUtil.powerOfTwo(CTR_DRBG.getFactory().getSeedByteLength()))
-      // println("*** index " + index + " seed " + seed + " value " + value)
+
       val r = DeterministicRandomByteSequence.getInstance(CTR_DRBG.getFactory(), converter.reconvert(seed))
       (r, value)
     }
@@ -108,9 +108,7 @@ object Util {
       val sequence = group.getIndependentGenerators(d).limit(i)
       sequence.asScala.toList
     }
-    // println("GetIndependentGenerators " + total + " " + items.size)
 
-    // DenseArray.getInstance(items.drop(skip).toList.toArray)
     items.drop(skip).toList.asJava
   }
 

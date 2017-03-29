@@ -33,6 +33,10 @@ import ch.bfh.unicrypt.math.function.classes.MultiIdentityFunction
 import ch.bfh.unicrypt.math.function.classes.ProductFunction
 import ch.bfh.unicrypt.math.function.interfaces.Function
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractSet
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import mpservice.MPBridgeS
 
 /**
@@ -56,6 +60,8 @@ trait ProofSettings {
  */
 object Verifier extends ProofSettings {
 
+  val logger = LoggerFactory.getLogger(Verifier.getClass)
+
   def verifyKeyShare(share: EncryptionKeyShareDTO, Csettings: CryptoSettings, proverId: String) = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
@@ -77,7 +83,7 @@ object Verifier extends ProofSettings {
     val proofTriple: Triple = Triple.getInstance(commitment, challenge, response)
 
     val result = pg.verify(proofTriple, publicKey)
-    println(s"Verifier: verifyKeyShare......$result")
+    logger.info(s"Verifier: verifyKeyShare......$result")
 
     result
   }
@@ -111,7 +117,7 @@ object Verifier extends ProofSettings {
     val proof: Triple = Triple.getInstance(commitment, challenge, response)
     val result = proofSystem.verify(proof, publicInput)
 
-    println(s"Verifier: verifyPartialDecryptions $result")
+    logger.info(s"Verifier: verifyPartialDecryptions $result")
 
     result
   }
@@ -125,7 +131,7 @@ object Verifier extends ProofSettings {
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
         Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
 
-    println("Getting proof systems..")
+    logger.info("Getting proof systems..")
 
     // Create e-values challenge generator
     val ecg: ChallengeGenerator = PermutationCommitmentProofSystem.createNonInteractiveEValuesGenerator(
@@ -140,15 +146,15 @@ object Verifier extends ProofSettings {
 
     val permutationCommitment = Util.fromString(pcs.getCommitmentSpace(), shuffleProof.permutationCommitment)
 
-    println("Getting values..")
+    logger.info("Getting values..")
 
     val commitment1 = Util.fromString(pcps.getCommitmentSpace(), shuffleProof.permutationProof.commitment)
     val challenge1 = pcps.getChallengeSpace.getElementFrom(shuffleProof.permutationProof.challenge)
     val response1 = pcps.getResponseSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.permutationProof.response)
 
     // FIXME remove trace (conversion bug code)
-    // println(s"deserialize commitment ${shuffleProof.mixProof.commitment}")
-    // println(s"commitmentspace ${spg.getCommitmentSpace}")
+    // logger.info(s"deserialize commitment ${shuffleProof.mixProof.commitment}")
+    // logger.info(s"commitmentspace ${spg.getCommitmentSpace}")
 
     // FIXME remove  (conversion bug code)
     // AbstractSet.debug = true;
@@ -162,34 +168,34 @@ object Verifier extends ProofSettings {
     val permutationProofDTO = shuffleProof.permutationProof
     val mixProofDTO = shuffleProof.mixProof
 
-    println("Converting bridging commitments..")
+    logger.info("Converting bridging commitments..")
 
     // bridging commitments: GStarmod
     val bridgingCommitments = permutationProofDTO.bridgingCommitments.par.map { x =>
       Util.fromString(Csettings.group, x)
     }.seq
 
-    println("Converting permutation e values..")
+    logger.info("Converting permutation e values..")
 
     // evalues: ZMod
     val eValues = permutationProofDTO.eValues.par.map { x =>
       Csettings.group.getZModOrder.getElementFrom(x)
     }.seq
-    println("Converting shuffle e values..")
+    logger.info("Converting shuffle e values..")
     val eValues2 = mixProofDTO.eValues.par.map { x =>
       Csettings.group.getZModOrder.getElementFrom(x)
     }.seq
 
-    println("Getting proof instances..")
+    logger.info("Getting proof instances..")
     val permutationProof: Tuple = Tuple.getInstance(Util.tupleFromSeq(eValues), Util.tupleFromSeq(bridgingCommitments),
       commitment1, challenge1, response1)
     val mixProof: Tuple = Tuple.getInstance(Util.tupleFromSeq(eValues2), commitment2, challenge2, response2)
 
-    println("Getting public inputs..")
+    logger.info("Getting public inputs..")
     val publicInputShuffle: Tuple = Tuple.getInstance(permutationCommitment, votes, shuffledVotes)
     val publicInputPermutation = permutationCommitment
 
-    println("Verifying..")
+    logger.info("Verifying..")
     val v1 = pcps.verify(permutationProof, publicInputPermutation)
 
     val v2 = spg.verify(mixProof, publicInputShuffle)
@@ -197,7 +203,7 @@ object Verifier extends ProofSettings {
     val v3 = publicInputPermutation.isEquivalent(publicInputShuffle.getFirst())
 
     val result = v1 && v2 && v3
-    println(s"Verifier: verifyShuffle: $result")
+    logger.info(s"Verifier: verifyShuffle: $result")
 
     result
   }

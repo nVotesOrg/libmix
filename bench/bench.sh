@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# you must have run the assembly command from sbt for this to work
+# you must have run the assembly and assemblyPackageScala commands from sbt for this to work
 CLASSPATH=../target/scala-2.12/libmix-assembly-0.2-SNAPSHOT.jar:../target/scala-2.12/scala-library-2.12.1-assembly.jar
 
 MAINCLASS=org.nvotes.libmix.benchmark.Benchmark
@@ -25,5 +25,5 @@ do
   time1=`java $OPTIONS_ONE -classpath $CLASSPATH $MAINCLASS $votes | grep -Po '(?<=time: )[^\] ]*'`
   time2=`java $OPTIONS_TWO -classpath $CLASSPATH $MAINCLASS $votes | grep -Po '(?<=time: )[^\] ]*'`
   echo $votes $time1 $time2
-  echo $votes $time1 $time2  >> times.dat
+  echo $votes $time1 $time2 >> times.dat
 done

@@ -73,6 +73,8 @@ import ch.bfh.unicrypt.math.function.classes.ProductFunction;
 // drb
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractCyclicGroup;
 import org.nvotes.libmix.mpservice.MPBridge;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 //
 // @see [TW10] Protocol 1: Permutation Matrix
@@ -90,6 +92,10 @@ public class PermutationCommitmentProofSystem
 	final private int kc;
 	final private int kr;
 	final private Tuple independentGenerators;
+
+	// drb
+	private final static Logger logger = LoggerFactory.getLogger(PermutationCommitmentProofSystem.class);
+
 
 	private PermutationCommitmentProofSystem(SigmaChallengeGenerator sigmaChallengeGenerator,
 		   ChallengeGenerator eValuesGenerator,
@@ -229,13 +235,13 @@ public class PermutationCommitmentProofSystem
 		}, "2");
 
 
-		System.out.println("Cannot parallelize..");
+		logger.info("Cannot parallelize..");
 		long now = System.currentTimeMillis();
 		for (int i = 0; i < this.size; i++) {
 			Element c_i_1 = i == 0 ? h : cs[i - 1];
 			cs[i] = temp[i].apply(c_i_1.selfApply(ePrimeV.getAt(i)));  //   [2n]
 		}
-		System.out.println("Bad loop: [" + ((System.currentTimeMillis() - now) / 1000.0) + " ms]");
+		logger.info("Bad loop: [" + ((System.currentTimeMillis() - now) / 1000.0) + " ms]");
 
 		final Tuple cV = Tuple.getInstance(cs);
 		final Element d = ds[ds.length - 1];

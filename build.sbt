@@ -25,7 +25,8 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-  "com.squareup.jnagmp" % "jnagmp" % "2.0.0"
+  "com.squareup.jnagmp" % "jnagmp" % "2.0.0",
+  "org.slf4j" % "slf4j-api" % "1.7.25"
   // use this line to build a jar with only nMix + unicrypt
   // "com.squareup.jnagmp" % "jnagmp" % "2.0.0" % "provided"
 )

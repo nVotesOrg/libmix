@@ -7,6 +7,9 @@ import java.math.BigInteger;
 import java.util.function.Supplier;
 import com.squareup.jnagmp.Gmp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.nvotes.libmix.Util;
 
 public class MPBridge {
@@ -23,6 +26,8 @@ public class MPBridge {
 	private LinkedList<ModPow2> requests = new LinkedList<ModPow2>();
 	private List<BigInteger> answers = null;
 
+	private final static Logger logger = LoggerFactory.getLogger(MPBridge.class);
+
 	private static ThreadLocal<MPBridge> instance = new ThreadLocal<MPBridge>() {
 		@Override protected MPBridge initialValue() {
 			return new MPBridge();
@@ -30,14 +35,14 @@ public class MPBridge {
 	};
 
 	public static void init() {
-		System.out.println("***************************************************");
-		System.out.println("* MPBridge INIT");
-		System.out.println("*");
-		System.out.println("* useGmp: " + useGmp);
-		System.out.println("* useExtractor: " + useExtractor);
-		System.out.println("* MPService implementation: " + MPService.toString());
+		logger.info("***************************************************");
+		logger.info("* MPBridge INIT");
+		logger.info("*");
+		logger.info("* useGmp: " + useGmp);
+		logger.info("* useExtractor: " + useExtractor);
+		logger.info("* MPService implementation: " + MPService.toString());
 		MPService.init();
-		System.out.println("***************************************************");
+		logger.info("***************************************************");
 	}
 
 	public static MPBridge i() {
@@ -110,7 +115,7 @@ public class MPBridge {
 	 	long now = System.currentTimeMillis();
 	 	T ret = f.get();
 	 	long r = System.currentTimeMillis() - now;
-	 	System.out.println("Record: [" + r + " ms]");
+	 	logger.info("Record: [" + r + " ms]");
 	 	ModPow2[] reqs = stopRecord();
 		b(3);
 		if(reqs.length > 0) {
@@ -120,7 +125,7 @@ public class MPBridge {
 			startReplay(answers);
 			ret = f.get();
 			long t = System.currentTimeMillis() - now;
-			System.out.println("Compute: [" + c + " ms] R+C: [" + (r+c) + " ms] Total: [" + t + " ms]");
+			logger.info("Compute: [" + c + " ms] R+C: [" + (r+c) + " ms] Total: [" + t + " ms]");
 			stopReplay();
 		}
 		reset();
@@ -220,7 +225,7 @@ public class MPBridge {
 	 	long now = System.currentTimeMillis();
 	 	T ret = f.get();
 	 	long r = System.currentTimeMillis() - now;
-	 	System.out.println("R: [" + r + " ms]");
+	 	logger.info("R: [" + r + " ms]");
 	 	ModPow2[] reqs = stopRecord();
 		b(3);
 		if(reqs.length > 0) {
@@ -232,7 +237,7 @@ public class MPBridge {
 			startReplayDebug(answers);
 			ret = f.get();
 			long t = System.currentTimeMillis() - now;
-			System.out.println("\nC: [" + c + " ms] T: [" + t + " ms] R+C: [" + (r+c) + " ms]");
+			logger.info("\nC: [" + c + " ms] T: [" + t + " ms] R+C: [" + (r+c) + " ms]");
 
 			stopReplayDebug();
 		}
@@ -267,7 +272,7 @@ public class MPBridge {
 		StackTraceElement caller = traces[trace];
 		found += diff;
 		long diffTime = System.currentTimeMillis() - i.beforeTime;
-		System.err.println(">>> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diffTime + " ms] [" + diff + "]" + " (" + found + ", " + total + ") (" + extracted + ")");
+		logger.info(">>> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diffTime + " ms] [" + diff + "]" + " (" + found + ", " + total + ") (" + extracted + ")");
 	}
 
 	public static void b() {
@@ -284,6 +289,6 @@ public class MPBridge {
 		long diffFound = found - i().foundZ;
 		StackTraceElement[] traces = Thread.currentThread().getStackTrace();
 		StackTraceElement caller = traces[2];
-		System.err.println("> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diff + "]" + " (" + found + ", " + diffFound + ", " + total + ") (" + extracted + ")");
+		logger.info("> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diff + "]" + " (" + found + ", " + diffFound + ", " + total + ") (" + extracted + ")");
 	}
 }

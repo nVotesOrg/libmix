@@ -62,7 +62,7 @@ object Benchmark extends App {
   var mixTwo: ShuffleResultDTO = null
   var start = 0L
   if(args.length == 1) {
-    println("timing serial offline + online")
+    println("Timing serial offline + online")
 
     start = System.currentTimeMillis
     // shuffle
@@ -70,7 +70,7 @@ object Benchmark extends App {
     mixTwo = MixerTrustee.shuffleVotes(mixOne.votes, publicKeyString, proverId2, cSettings)
   }
   else {
-    println("timing parallel offline + online")
+    println("Timing parallel-offline + online")
 
     // offline phase
     val (pdto1, preData1) = MixerTrustee.preShuffleVotes(votes, publicKeyString, proverId1, cSettings)
@@ -208,7 +208,13 @@ object MixerTrustee extends Mixer {
     shuffle(Util.tupleFromSeq(vs), pk, cSettings, id)
   }
 
+  /** Performs the offline phase of the shuffle
+   *
+   *  Returns the permutation data and the permutation proof
+   */
   def preShuffleVotes(votes: Seq[String], publicKey: String, id: String, cSettings: CryptoSettings) = {
+    println("Mixer preShuffle..")
+
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
     val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
@@ -216,9 +222,14 @@ object MixerTrustee extends Mixer {
     preShuffle(votes.size, pk, cSettings, id)
   }
 
+  /** Performs the online phase of the shuffle
+   *
+   *  Requires data from the online phase
+   *  Returns the shuffle and proof of knowledgeas an libmix ShuffleResultDTO
+   */
   def shuffleVotes(votesString: Seq[String], preData: PreShuffleData, pdto: PermutationProofDTO,
     publicKey: String, id: String, cSettings: CryptoSettings) = {
-    println("Mixer..")
+    println("Mixer online phase..")
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
     val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)

@@ -7,7 +7,8 @@ import scala.util.Try
 import scala.util.Success
 import com.squareup.jnagmp.Gmp
 
-/******************** PUBLIC API ********************/
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Represents a modular exponentiation operation
@@ -36,8 +37,6 @@ trait ModPowService {
   def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult]
 }
 
-/******************** IMPLEMENTATION ********************/
-
 object MPService extends ModPowService {
   val service = GmpParallelModPowService
 
@@ -52,13 +51,15 @@ object MPService extends ModPowService {
 
 object MPBridgeS {
 
+  val logger = LoggerFactory.getLogger(MPBridgeS.getClass)
+
   def ex[T](f: => T, v: String) = {
     MPBridge.a()
     MPBridge.startRecord(v)
     val now = System.currentTimeMillis
     var ret = f
     val r = System.currentTimeMillis - now
-    println(s"Record: [$r ms]")
+    logger.info(s"Record: [$r ms]")
     val requests = MPBridge.stopRecord()
     MPBridge.b(3)
     if(requests.length > 0) {
@@ -68,7 +69,7 @@ object MPBridgeS {
         MPBridge.startReplay(answers)
         ret = f
         val t = System.currentTimeMillis - now
-        println(s"Compute: [$c ms] R+C: [${r+c} ms] Total: [$t ms]")
+        logger.info(s"Compute: [$c ms] R+C: [${r+c} ms] Total: [$t ms]")
         MPBridge.stopReplay()
     }
     MPBridge.reset()
