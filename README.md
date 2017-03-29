@@ -14,7 +14,7 @@ m4-16, 100k votes: time: 1676.304
 
 ### Running the benchmark
 
-First make sure the project has been packed. The benchmark script also needs the scala dependency:
+First make sure the project has been packaged, the benchmark script also needs the scala dependency:
 
 ```sbt assembly```
 ```sbt assemblyPackageScala```
