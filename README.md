@@ -12,23 +12,31 @@ See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance
 
 m4-16, 100k votes: time: 1676.304
 
-### Latest changes
+### Running the benchmark
 
-* Updated to unicrypt 2.2-release (commit c6d3502100e4950e123326dcc5278265432f5a33)
-* Updated to Scala 2.12
-* Removed Akka clustering and akka dependencies
-* Removed shapeless dependency
-* Removed bypass-membership-checks code
-* Added gmp modpows to unicrypt (jnagmp)
-* Added gmp legendre for membership checks to unicrypt (jnagmp kronecker)
-* Converted CryptoTest to ScalaTest format (sbt test)
-* Rearranged packages
-* Added benchmark/demo
-* Readded unicrypt parallelism optimizations
-* Added support for offline + online phase split
-* Added sl4j tracing
+First make sure the project has been packed. The benchmark script also needs the scala dependency:
 
-### Packaging
+```sbt assembly```
+```sbt assemblyPackageScala```
+
+In the bench directory you will find two scripts, 'run.sh' and 'bench.sh' Use run.sh to
+execute one run of the benchmark. You need to pass in the number of votes, for example:
+
+```./run.sh 1000```
+
+To execute the benchmark simulating parallel execution of the offline phase of the shuffle,
+pass in a second parameter to the script:
+
+```./run.sh 1000 true```
+
+Once the benchmark completes it will print out a time in seconds. You can adjust the optimization
+settings (see below) editing the run.sh script.
+
+The 'bench.sh' script can be used to carry out several runs comparing
+different optimization settings. It also includes a simple gplot script
+to plot results. Please refer to that file for details.
+
+### Packaging the library
 
 Use the
 
@@ -59,6 +67,22 @@ Activates parallel computation of generators used in Terelius-Wikstrom proofs (e
 ### Randomness
 
 To speed up HybridRandomByteSequence under linux install rng-tools.
+
+### Latest changes
+
+* Updated to unicrypt 2.2-release (commit c6d3502100e4950e123326dcc5278265432f5a33)
+* Updated to Scala 2.12
+* Removed Akka clustering and akka dependencies
+* Removed shapeless dependency
+* Removed bypass-membership-checks code
+* Added gmp modpows to unicrypt (jnagmp)
+* Added gmp legendre for membership checks to unicrypt (jnagmp kronecker)
+* Converted CryptoTest to ScalaTest format (sbt test)
+* Rearranged packages
+* Added benchmark/demo
+* Readded unicrypt parallelism optimizations
+* Added support for offline + online phase split
+* Added sl4j tracing
 
 ### Work to do
 
