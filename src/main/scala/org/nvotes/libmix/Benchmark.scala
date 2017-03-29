@@ -14,6 +14,10 @@ import org.nvotes.libmix._
  *  Share generation, share pok verification, public key generation, vote casting
  *  mixing, mix verification, decryption, decryption verification
  *
+ *  When running, must pass first argument on command line as number of votes.
+ *  To simulate parallel execution of offline phase, pass a second
+ *  argument after the number of votes (with any value)
+ *
  */
 object Benchmark extends App {
 
@@ -53,11 +57,29 @@ object Benchmark extends App {
   // encrypt the votes with the public key of the election
   val votes = Util.encryptVotes(plaintexts, cSettings, publicKey).map(_.convertToString)
 
-  val start = System.currentTimeMillis
+  var mixOne: ShuffleResultDTO = null
+  var mixTwo: ShuffleResultDTO = null
+  var start = 0L
+  if(args.length == 1) {
+    println("timing serial offline + online")
 
-  // shuffle
-  val mixOne = MixerTrustee.shuffleVotes(votes, publicKeyString, proverId1, cSettings)
-  val mixTwo = MixerTrustee.shuffleVotes(mixOne.votes, publicKeyString, proverId2, cSettings)
+    start = System.currentTimeMillis
+    // shuffle
+    mixOne = MixerTrustee.shuffleVotes(votes, publicKeyString, proverId1, cSettings)
+    mixTwo = MixerTrustee.shuffleVotes(mixOne.votes, publicKeyString, proverId2, cSettings)
+  }
+  else {
+    println("timing parallel offline + online")
+
+    // pre-shuffle
+    val (preData1,pdto1) = MixerTrustee.preShuffleVotes(votes, publicKeyString, proverId1, cSettings)
+    start = System.currentTimeMillis
+    val (preData2,pdto2) = MixerTrustee.preShuffleVotes(votes, publicKeyString, proverId2, cSettings)
+
+    // online shuffle
+    mixOne = MixerTrustee.shuffleVotes(votes, preData1, pdto1, publicKeyString, proverId1, cSettings)
+    mixTwo = MixerTrustee.shuffleVotes(mixOne.votes, preData2, pdto2, publicKeyString, proverId2, cSettings)
+  }
 
   // verify shuffle
   val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
@@ -89,12 +111,10 @@ object Benchmark extends App {
 
   val end = System.currentTimeMillis
 
-  // println(plaintexts.sorted)
-  // println(decrypted.map(_.toInt).sorted)
   println("Plaintexts match: " + (decrypted.map(_.toInt).sorted == plaintexts.sorted))
 
   val time = ((end - start) / 1000.0)
-  println(s"time: $time ($totalVotes)")
+  println(s"time: $time ($totalVotes) (${args.length == 2})")
 
   /** Helper to combine decryptions and yield plaintexts.
    *
@@ -186,30 +206,26 @@ object MixerTrustee extends Mixer {
     shuffle(Util.tupleFromSeq(vs), pk, cSettings, id)
   }
 
-  // TODO add support for offline phase
-
-  /* def preShuffleVotes(e: Election[_, VotesStopped]) = {
-    val elGamal = ElGamalEncryptionScheme.getInstance(e.state.cSettings.generator)
+  def preShuffleVotes(votes: Seq[String], publicKey: String, id: String, cSettings: CryptoSettings) = {
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
-    val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(e.state.publicKey)
+    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
 
-    preShuffle(e.state.votes.size, publicKey, e.state.cSettings, id)
-  } */
+    preShuffle(votes.size, pk, cSettings, id)
+  }
 
-  /* def shuffleVotes(e: Election[_, Mixing[_]], preData: PreShuffleData, pdtoFuture: Future[PermutationProofDTO]) = {
+  def shuffleVotes(votesString: Seq[String], preData: PreShuffleData, pdto: PermutationProofDTO,
+    publicKey: String, id: String, cSettings: CryptoSettings) = {
     println("Mixer..")
-    val elGamal = ElGamalEncryptionScheme.getInstance(e.state.cSettings.generator)
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
-    val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(e.state.publicKey)
+    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
     println("Convert votes..")
 
-    val votes = e.state match {
-      case s: Mixing[_0] => e.state.votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
-      case _ => e.state.mixes.toList.last.votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
-    }
+    val votes = votesString.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
 
     println("Mixer creating shuffle..")
 
-    shuffle(Util.tupleFromSeq(votes), publicKey, e.state.cSettings, id, preData, pdtoFuture)
-  }*/
+    shuffle(Util.tupleFromSeq(votes), preData, pdto, pk, cSettings, id)
+  }
 }

@@ -33,9 +33,7 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-case class PreShuffleData(mixer: ReEncryptionMixer, psi: PermutationElement, elGamal: ElGamalEncryptionScheme,
-  challengeGenerator: SigmaChallengeGenerator, ecg: ChallengeGenerator, permutationCommitmentRandomizations: Tuple,
-  permutationCommitment: Tuple)
+case class PreShuffleData(permutationElementString: String, permutationCommitmentRandomizationsString: String)
 
 /**
  * Functions needed for a keymaker trustee
@@ -167,42 +165,53 @@ trait Mixer extends ProofSettings {
 
     println("Mixer: permutation proof, generating..")
 
-    val permutationProofFuture = Future {
-      pcps.generate(privateInputPermutation, publicInputPermutation)
-    }.map { permutationProof =>
+    val permutationProof = pcps.generate(privateInputPermutation, publicInputPermutation)
 
-      val bridgingCommitments = pcps.getBridingCommitment(permutationProof).asInstanceOf[Tuple]
-      val eValues = pcps.getEValues(permutationProof).asInstanceOf[Tuple]
-      val permutationProofDTO = PermutationProofDTO(pcps.getCommitment(permutationProof).convertToString(),
-        pcps.getChallenge(permutationProof).convertToString(),
-        pcps.getResponse(permutationProof).convertToString(),
-        bridgingCommitments.asScala.par.map(x => x.convertToString).seq.toSeq,
-        eValues.asScala.par.map(x => x.convertToString).seq.toSeq)
+    val bridgingCommitments = pcps.getBridingCommitment(permutationProof).asInstanceOf[Tuple]
+    val eValues = pcps.getEValues(permutationProof).asInstanceOf[Tuple]
+    val permutationProofDTO = PermutationProofDTO(pcps.getCommitment(permutationProof).convertToString(),
+      pcps.getChallenge(permutationProof).convertToString(),
+      pcps.getResponse(permutationProof).convertToString(),
+      bridgingCommitments.asScala.par.map(x => x.convertToString).seq.toSeq,
+      eValues.asScala.par.map(x => x.convertToString).seq.toSeq)
 
-      permutationProofDTO
-    }
+    val preShuffleData = PreShuffleData(psi.convertToString, permutationCommitmentRandomizations.convertToString)
 
-    val preShuffleData = PreShuffleData(mixer, psi, elGamal, challengeGenerator, ecg, permutationCommitmentRandomizations, permutationCommitment)
-
-    (preShuffleData, permutationProofFuture)
+    (preShuffleData, permutationProofDTO)
   }
 
   // online phase of the proof of shuffle, requires preshuffle data from offline phase
-  def shuffle(ciphertexts: Tuple, publicKey: Element[_], Csettings: CryptoSettings, proverId: String, pre: PreShuffleData, pdtoFuture: Future[PermutationProofDTO]) = {
+  def shuffle(ciphertexts: Tuple, pre: PreShuffleData, pdto: PermutationProofDTO,
+    publicKey: Element[_], cSettings: CryptoSettings, proverId: String) = {
 
     println("Mixer: shuffle..")
-
-    val rs: Tuple = pre.mixer.generateRandomizations()
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
+    val mixer: ReEncryptionMixer = ReEncryptionMixer.getInstance(elGamal, publicKey, ciphertexts.getArity)
+    val rs: Tuple = mixer.generateRandomizations()
+    val psi: PermutationElement = mixer.getPermutationGroup().getElementFrom(pre.permutationElementString)
 
     // shuffle
-    val shuffledVs: Tuple = pre.mixer.shuffle(ciphertexts, pre.psi, rs)
+    val shuffledVs: Tuple = mixer.shuffle(ciphertexts, psi, rs)
 
     println("Mixer: shuffle proof..")
 
-    val spg: ReEncryptionShuffleProofSystem = ReEncryptionShuffleProofSystem.getInstance(pre.challengeGenerator, pre.ecg, ciphertexts.getArity(), pre.elGamal, publicKey)
+    val otherInput: StringElement = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
+    val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
+        cSettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
 
-    val privateInputShuffle: Tuple = Tuple.getInstance(pre.psi, pre.permutationCommitmentRandomizations, rs)
-    val publicInputShuffle: Tuple = Tuple.getInstance(pre.permutationCommitment, ciphertexts, shuffledVs)
+    val ecg: ChallengeGenerator = PermutationCommitmentProofSystem.createNonInteractiveEValuesGenerator(
+        cSettings.group.getZModOrder(), ciphertexts.getArity)
+
+    val spg: ReEncryptionShuffleProofSystem = ReEncryptionShuffleProofSystem.getInstance(challengeGenerator, ecg, ciphertexts.getArity(), elGamal, publicKey)
+
+    val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(cSettings.group, ciphertexts.getArity)
+
+    val permutationCommitmentRandomizations: Tuple = Util.fromString(pcs.getRandomizationSpace(), pre.permutationCommitmentRandomizationsString).asInstanceOf[Tuple]
+
+    val permutationCommitment: Tuple = pcs.commit(psi, permutationCommitmentRandomizations)
+
+    val privateInputShuffle: Tuple = Tuple.getInstance(psi, permutationCommitmentRandomizations, rs)
+    val publicInputShuffle: Tuple = Tuple.getInstance(permutationCommitment, ciphertexts, shuffledVs)
 
     println("Mixer: shuffle proof, generating..")
 
@@ -221,16 +230,15 @@ trait Mixer extends ProofSettings {
       spg.getResponse(mixProof).convertToString,
       eValues2.asScala.map(x => x.convertToString).toSeq)
 
-    pdtoFuture.map { permutationProofDTO =>
-      val shuffleProofDTO = ShuffleProofDTO(mixProofDTO, permutationProofDTO, pre.permutationCommitment.convertToString)
 
-      val votesString: Seq[String] = Util.stringsFromTuple(shuffledVs)
+    val shuffleProofDTO = ShuffleProofDTO(mixProofDTO, pdto, permutationCommitment.convertToString)
 
-      ShuffleResultDTO(shuffleProofDTO, votesString)
-    }
+    val votesString: Seq[String] = Util.stringsFromTuple(shuffledVs)
+
+    ShuffleResultDTO(shuffleProofDTO, votesString)
   }
 
-  // shuffle with both offlien and online phase
+  // shuffle with both offline and online phase
   def shuffle(ciphertexts: Tuple, publicKey: Element[_], Csettings: CryptoSettings, proverId: String) = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
