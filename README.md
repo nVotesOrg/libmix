@@ -26,6 +26,7 @@ m4-16, 100k votes: time: 1676.304
 * Added benchmark/demo
 * Readded unicrypt parallelism optimizations
 * Added support for offline + online phase split
+* Added sl4j tracing
 
 ### Packaging
 
@@ -62,5 +63,4 @@ To speed up HybridRandomByteSequence under linux install rng-tools.
 ### Work to do
 
 * Revise configuration mechanism
-* Proper tracing
 * MPBridge clean up
