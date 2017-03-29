@@ -25,6 +25,7 @@ m4-16, 100k votes: time: 1676.304
 * Rearranged packages
 * Added benchmark/demo
 * Readded unicrypt parallelism optimizations
+* Added support for offline + online phase split
 
 ### Packaging
 
