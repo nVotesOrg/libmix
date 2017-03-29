@@ -14,8 +14,10 @@ See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance
 
 First make sure the project has been packaged, the benchmark script also needs the scala dependency:
 
-```sbt assembly
-sbt assemblyPackageScala```
+```
+sbt assembly
+sbt assemblyPackageScala
+```
 
 In the bench directory you will find two scripts, 'run.sh' and 'bench.sh' Use run.sh to
 execute one run of the benchmark. You need to pass in the number of votes, for example:
