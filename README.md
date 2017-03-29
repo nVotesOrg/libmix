@@ -10,8 +10,6 @@ A mixnet library built on top of [unicrypt](https://github.com/bfh-evg/univote2)
 
 See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance numbers.
 
-m4-16, 100k votes: time: 1676.304
-
 ### Running the benchmark
 
 First make sure the project has been packaged, the benchmark script also needs the scala dependency:
