@@ -182,13 +182,13 @@ trait Mixer extends ProofSettings {
       bridgingCommitments.asScala.par.map(x => x.convertToString).seq.toSeq,
       eValues.asScala.par.map(x => x.convertToString).seq.toSeq)
 
-    val preShuffleData = PreShuffleData(psi, permutationCommitmentRandomizations)
+    val pData = PermutationData(psi, permutationCommitmentRandomizations)
 
-    (permutationProofDTO, preShuffleData)
+    (permutationProofDTO, pData)
   }
 
   // online phase of the proof of shuffle, requires preshuffle data from offline phase
-  def shuffle(ciphertexts: Tuple, pre: PreShuffleData, pdto: PermutationProofDTO,
+  def shuffle(ciphertexts: Tuple, pData: PermutationData, pdto: PermutationProofDTO,
     publicKey: Element[_], cSettings: CryptoSettings, proverId: String) = {
 
     logger.info("Mixer: shuffle..")
@@ -197,7 +197,7 @@ trait Mixer extends ProofSettings {
     val rs: Tuple = mixer.generateRandomizations()
     // in case we need to serialize perm data as strings
     // val psi: PermutationElement = mixer.getPermutationGroup().getElementFrom(pre.permutation)
-    val psi: PermutationElement = pre.permutation
+    val psi: PermutationElement = pData.permutation
 
     // shuffle
     val shuffledVs: Tuple = mixer.shuffle(ciphertexts, psi, rs)
@@ -217,7 +217,7 @@ trait Mixer extends ProofSettings {
 
     // in case we need to serialize perm data as strings
     // val permutationCommitmentRandomizations: Tuple = Util.fromString(pcs.getRandomizationSpace(), pre.randomizations).asInstanceOf[Tuple]
-    val permutationCommitmentRandomizations: Tuple = pre.randomizations
+    val permutationCommitmentRandomizations: Tuple = pData.randomizations
 
     val permutationCommitment: Tuple = pcs.commit(psi, permutationCommitmentRandomizations)
 

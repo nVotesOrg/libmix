@@ -14,7 +14,7 @@ case class CryptoSettings(group: GStarModSafePrime, generator: Element[_])
  *
  *	Used to separate the offline and online phases of the shuffle
  */
-case class PreShuffleData(permutation: PermutationElement, randomizations: Tuple)
+case class PermutationData(permutation: PermutationElement, randomizations: Tuple)
 /**
  * Serialization (Data Transfer Object) classes
  *
