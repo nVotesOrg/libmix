@@ -182,7 +182,7 @@ trait Mixer extends ProofSettings {
       bridgingCommitments.asScala.par.map(x => x.convertToString).seq.toSeq,
       eValues.asScala.par.map(x => x.convertToString).seq.toSeq)
 
-    val preShuffleData = PreShuffleData(psi.convertToString, permutationCommitmentRandomizations.convertToString)
+    val preShuffleData = PreShuffleData(psi, permutationCommitmentRandomizations)
 
     (permutationProofDTO, preShuffleData)
   }
@@ -195,7 +195,9 @@ trait Mixer extends ProofSettings {
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val mixer: ReEncryptionMixer = ReEncryptionMixer.getInstance(elGamal, publicKey, ciphertexts.getArity)
     val rs: Tuple = mixer.generateRandomizations()
-    val psi: PermutationElement = mixer.getPermutationGroup().getElementFrom(pre.permutation)
+    // in case we need to serialize perm data as strings
+    // val psi: PermutationElement = mixer.getPermutationGroup().getElementFrom(pre.permutation)
+    val psi: PermutationElement = pre.permutation
 
     // shuffle
     val shuffledVs: Tuple = mixer.shuffle(ciphertexts, psi, rs)
@@ -213,7 +215,9 @@ trait Mixer extends ProofSettings {
 
     val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(cSettings.group, ciphertexts.getArity)
 
-    val permutationCommitmentRandomizations: Tuple = Util.fromString(pcs.getRandomizationSpace(), pre.randomizations).asInstanceOf[Tuple]
+    // in case we need to serialize perm data as strings
+    // val permutationCommitmentRandomizations: Tuple = Util.fromString(pcs.getRandomizationSpace(), pre.randomizations).asInstanceOf[Tuple]
+    val permutationCommitmentRandomizations: Tuple = pre.randomizations
 
     val permutationCommitment: Tuple = pcs.commit(psi, permutationCommitmentRandomizations)
 

@@ -19,7 +19,7 @@ sbt assembly
 sbt assemblyPackageScala
 ```
 
-In the 'bench' directory you will find two scripts, 'run.sh' and 'bench.sh' Use run.sh to
+In the 'bench' directory you will find two scripts, 'run.sh' and 'bench.sh'. Use run.sh to
 execute one run of the benchmark. You need to pass in the number of votes, for example:
 
 ```./run.sh 1000```

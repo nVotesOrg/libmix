@@ -2,12 +2,19 @@ package org.nvotes.libmix
 
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Element
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
+import ch.bfh.unicrypt.math.algebra.general.classes.PermutationElement
+import ch.bfh.unicrypt.math.algebra.general.classes.Tuple
 
 /** The group and generator for an election
  *
  */
 case class CryptoSettings(group: GStarModSafePrime, generator: Element[_])
 
+/** Private permutation data
+ *
+ *	Used to separate the offline and online phases of the shuffle
+ */
+case class PreShuffleData(permutation: PermutationElement, randomizations: Tuple)
 /**
  * Serialization (Data Transfer Object) classes
  *
@@ -18,8 +25,6 @@ case class EncryptionKeyShareDTO(sigmaProofDTO: SigmaProofDTO, keyShare: String)
 
 case class PartialDecryptionDTO(partialDecryptions: Seq[String], proofDTO: SigmaProofDTO)
 case class SigmaProofDTO(commitment: String, challenge: String, response: String)
-
-case class PreShuffleData(permutation: String, randomizations: String)
 
 case class ShuffleResultDTO(shuffleProof: ShuffleProofDTO, votes: Seq[String])
 case class PermutationProofDTO(commitment: String, challenge: String, response: String,
