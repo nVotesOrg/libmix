@@ -93,7 +93,7 @@ public class MPBridge {
 		else if(!i.modulus.equals(mod)) {
 			throw new RuntimeException(i.modulus + "!=" + mod);
 		}
-		extracted++;
+
 		i.requests.add(new ModPow2(base, pow));
 	}
 
@@ -169,10 +169,6 @@ public class MPBridge {
     	return i().modulus;
     }
 
-    public static long getExtracted() {
-		return extracted;
-	}
-
 	public static boolean isRecording() {
 		return i().recording;
 	}
@@ -191,13 +187,8 @@ public class MPBridge {
 	private List<ModPowResult> answersDebug = null;
 
 	// tracing vars
-	public static long total = 0;
-	public static long found = 0;
-	private static long extracted = 0;
 	public long before = 0;
-	public long beforeZ = 0;
-	public long foundZ = 0;
-	public boolean debug = false;
+	public static long total = 0;
 	private long beforeTime = 0;
 
 	public static void startReplayDebug(ModPowResult[] answers_) {
@@ -250,45 +241,19 @@ public class MPBridge {
 		return parDebug(f, "2");
 	}
 
-	public static void setDebug(boolean debug) {
-		i().debug = debug;
-	}
-
-    public static void l() {
-		StackTraceElement[] traces = Thread.currentThread().getStackTrace();
-		StackTraceElement caller = traces[2];
-		System.err.println("* " + caller.getFileName() + ":" + caller.getLineNumber() + "..");
-	}
-
 	public static void a() {
-		i().before = total;
 		i().beforeTime = System.currentTimeMillis();
 	}
 
 	public static void b(int trace) {
 		MPBridge i = i();
-		long diff = total - i.before;
 		StackTraceElement[] traces = Thread.currentThread().getStackTrace();
 		StackTraceElement caller = traces[trace];
-		found += diff;
 		long diffTime = System.currentTimeMillis() - i.beforeTime;
-		logger.info(">>> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diffTime + " ms] [" + diff + "]" + " (" + found + ", " + total + ") (" + extracted + ")");
+		logger.info(">>> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diffTime + " ms]" + " (" + total + ")");
 	}
 
 	public static void b() {
 		b(3);
-	}
-
-	public static void y() {
-		i().beforeZ = total;
-		i().foundZ = found;
-	}
-
-	public static void z() {
-		long diff = total - i().beforeZ;
-		long diffFound = found - i().foundZ;
-		StackTraceElement[] traces = Thread.currentThread().getStackTrace();
-		StackTraceElement caller = traces[2];
-		logger.info("> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diff + "]" + " (" + found + ", " + diffFound + ", " + total + ") (" + extracted + ")");
 	}
 }
