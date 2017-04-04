@@ -252,8 +252,4 @@ public class MPBridge {
 		long diffTime = System.currentTimeMillis() - i.beforeTime;
 		logger.info(">>> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diffTime + " ms]" + " (" + total + ")");
 	}
-
-	public static void b() {
-		b(3);
-	}
 }

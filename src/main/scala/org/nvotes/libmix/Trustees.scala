@@ -39,15 +39,21 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
  * Functions needed for a keymaker trustee
  *
- * Creation of key shares and partial decryptions, along with necessary proofs and verification
+ * Creation of key shares and partial decryptions, along with necessary proofs
  */
 trait KeyMaker extends ProofSettings {
 
   val logger = LoggerFactory.getLogger(getClass)
 
-  def createShare(proverId: String, Csettings: CryptoSettings) = {
+  /**
+   * Creates a public key share, the private share, and a proof
+   *
+   * The data is serialized and returned as a (EncryptionKeyShareDTO, String) tuple.
+   * The second element of the tuple is the private share.
+   */
+  def createShare(proverId: String, cSettings: CryptoSettings) = {
 
-    val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
 
     val kpg = elGamal.getKeyPairGenerator()
     val keyPair = kpg.generateKeyPair()
@@ -58,7 +64,7 @@ trait KeyMaker extends ProofSettings {
     val otherInput: StringElement = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
 
     val challengeGenerator: SigmaChallengeGenerator  = FiatShamirSigmaChallengeGenerator.getInstance(
-      Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
+      cSettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
 
     val pg: PlainPreimageProofSystem = PlainPreimageProofSystem.getInstance(challengeGenerator, function)
 
@@ -66,22 +72,26 @@ trait KeyMaker extends ProofSettings {
 
     val sigmaProofDTO = SigmaProofDTO(pg.getCommitment(proof).convertToString(), pg.getChallenge(proof).convertToString(), pg.getResponse(proof).convertToString())
 
-    // we return the share dto and the generated private key
     (EncryptionKeyShareDTO(sigmaProofDTO, publicKey.convertToBigInteger().toString), privateKey.convertToBigInteger().toString)
   }
 
-  def partialDecrypt(votes: Seq[Tuple], privateKey: Element[_], proverId: String, Csettings: CryptoSettings) = {
+  /**
+   * Partially decrypts a Seq of votes, creates proof of decryption
+   *
+   * The data is serialized and returned as a PartialDecryptionDTO
+   */
+  def partialDecrypt(votes: Seq[Tuple], privateKey: Element[_], proverId: String, cSettings: CryptoSettings) = {
 
-    val encryptionGenerator = Csettings.generator
+    val encryptionGenerator = cSettings.generator
 
-    val secretKey = Csettings.group.getZModOrder().getElementFrom(privateKey.convertToBigInteger)
-    // logger.info(s"PartialDecrypt: keymaker using secretKey $secretKey")
+    val secretKey = cSettings.group.getZModOrder().getElementFrom(privateKey.convertToBigInteger)
+
     val decryptionKey = secretKey.invert()
     val publicKey = encryptionGenerator.selfApply(secretKey)
 
     val generators = votes.par.map { v =>
       val element = v.getFirst()
-      // ask Rolf about this
+      // FIXME ask Rolf about this
       if(element.convertToString == "1") {
         logger.info("********** Crash incoming!")
       }
@@ -94,22 +104,26 @@ trait KeyMaker extends ProofSettings {
       (partialDecryption, generator)
     }, "2").unzip
 
-    val proofDTO = createProof(proverId, secretKey, publicKey, lists._1, lists._2, Csettings)
+    val proofDTO = createProof(proverId, secretKey, publicKey, lists._1, lists._2, cSettings)
 
     PartialDecryptionDTO(lists._1.par.map(_.convertToString).seq, proofDTO)
   }
 
+  /**
+   * Creates a proof of decryption
+   *
+   * The data is serialized and returned as a SigmaProofDTO
+   */
   private def createProof(proverId: String, secretKey: Element[_], publicKey: Element[_],
-    partialDecryptions: Seq[Element[_]], generatorFunctions: Seq[Function], Csettings: CryptoSettings) = {
+    partialDecryptions: Seq[Element[_]], generatorFunctions: Seq[Function], cSettings: CryptoSettings) = {
 
-    val encryptionGenerator = Csettings.generator
+    val encryptionGenerator = cSettings.generator
 
-    // Create proof functions
     val f1: Function = GeneratorFunction.getInstance(encryptionGenerator)
 
     val f2: Function = CompositeFunction.getInstance(
-        InvertFunction.getInstance(Csettings.group.getZModOrder()),
-        MultiIdentityFunction.getInstance(Csettings.group.getZModOrder(), generatorFunctions.length),
+        InvertFunction.getInstance(cSettings.group.getZModOrder()),
+        MultiIdentityFunction.getInstance(cSettings.group.getZModOrder(), generatorFunctions.length),
         ProductFunction.getInstance(generatorFunctions :_*))
 
     val privateInput = secretKey
@@ -117,8 +131,7 @@ trait KeyMaker extends ProofSettings {
     val otherInput = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
 
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
-        Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
-
+        cSettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
 
     val proofSystem: EqualityPreimageProofSystem = EqualityPreimageProofSystem.getInstance(challengeGenerator, f1, f2)
 
@@ -131,41 +144,45 @@ trait KeyMaker extends ProofSettings {
 /**
  * Functions needed for a mixer trustee
  *
- * Creation of shuffles and proofs (Terelius Wikstrom according to Locher-Haenni pdf)
+ * Creation of shuffles and proofs (Terelius Wikstrom according to Locher-Haenni paper)
  */
 trait Mixer extends ProofSettings {
 
   val logger = LoggerFactory.getLogger(getClass)
 
+  /**
+   * Performs the offline phase of the shuffle
+   *
+   * Creates a permutation, its commitment and proof, for a known number of votes.
+   *
+   * The data is serialized and returned as a (PermutationProofDTO, PermutationData) tuple.
+   * The second element of the tuple is the private permutation data.
+   */
+  def preShuffle(voteCount: Int, publicKey: Element[_], cSettings: CryptoSettings, proverId: String) = {
 
-  // corresponds to the offline phase of the proof of shuffle (permutation for known number of votes)
-  def preShuffle(voteCount: Int, publicKey: Element[_], Csettings: CryptoSettings, proverId: String) = {
-
-    val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
 
     val mixer: ReEncryptionMixer = ReEncryptionMixer.getInstance(elGamal, publicKey, voteCount)
     val psi: PermutationElement = mixer.getPermutationGroup().getRandomElement()
 
-    val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(Csettings.group, voteCount)
+    val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(cSettings.group, voteCount)
     val permutationCommitmentRandomizations: Tuple = pcs.getRandomizationSpace().getRandomElement()
 
     val permutationCommitment: Tuple = pcs.commit(psi, permutationCommitmentRandomizations)
 
     logger.info("Mixer: generators..")
 
-    // sigma challenge generator
     val otherInput: StringElement = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
-        Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
+        cSettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
 
-    // e-values challenge generator
     val ecg: ChallengeGenerator = PermutationCommitmentProofSystem.createNonInteractiveEValuesGenerator(
-        Csettings.group.getZModOrder(), voteCount)
+        cSettings.group.getZModOrder(), voteCount)
 
     logger.info("Mixer: permutation proof..")
 
     val pcps: PermutationCommitmentProofSystem = PermutationCommitmentProofSystem.getInstance(challengeGenerator, ecg,
-        Csettings.group, voteCount)
+        cSettings.group, voteCount)
 
     val privateInputPermutation: Pair = Pair.getInstance(psi, permutationCommitmentRandomizations)
     val publicInputPermutation = permutationCommitment
@@ -187,7 +204,13 @@ trait Mixer extends ProofSettings {
     (permutationProofDTO, pData)
   }
 
-  // online phase of the proof of shuffle, requires preshuffle data from offline phase
+  /**
+   * Performs the online phase of the shuffle given offline permutation data
+   *
+   *
+   *
+   * The data is serialized and returned as a ShuffleResultDTO
+   */
   def shuffle(ciphertexts: Tuple, pData: PermutationData, pdto: PermutationProofDTO,
     publicKey: Element[_], cSettings: CryptoSettings, proverId: String) = {
 
@@ -241,7 +264,6 @@ trait Mixer extends ProofSettings {
       spg.getChallenge(mixProof).convertToString,
       spg.getResponse(mixProof).convertToString,
       eValues2.asScala.map(x => x.convertToString).toSeq)
-
 
     val shuffleProofDTO = ShuffleProofDTO(mixProofDTO, pdto, permutationCommitment.convertToString)
 
