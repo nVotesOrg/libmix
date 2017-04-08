@@ -16,26 +16,32 @@ import ch.bfh.unicrypt.helper.math.MathUtil
 import java.math.BigInteger
 import scala.collection.JavaConverters._
 
-/** Some utilities
- *
+/**
+ *  Some utilities
  */
 object Util {
 
   val useGmp = getEnvBoolean("libmix.gmp")
   val generatorParallelism = 10
 
+  /** Returns a boolean system property, specified with -Dname=true|false */
   def getEnvBoolean(variable: String) = {
     sys.props.get(variable).getOrElse("false").toBoolean
   }
 
+  /** Converts a Seq of unicrypt Elements to a unicrypt Tuple */
   def tupleFromSeq(items: Seq[Element[_]]) = {
     Tuple.getInstance(items:_*)
   }
 
+  /** Converts unicrypt Tuples of Elements to a
+    Seq of Strings, using parallelism */
   def stringsFromTuple(tuple: Tuple): Seq[String] = {
     tuple.asScala.par.map{ x => x.convertToString }.seq.toSeq
   }
 
+  /** Returns random elements from the encryption space, useful to generate
+    random encryptions faster than encrypting known plaintexts */
   def getRandomVotes(size: Int, generator: Element[_], publicKey: Element[_]) = {
     val elGamal = ElGamalEncryptionScheme.getInstance(generator)
 
@@ -44,6 +50,8 @@ object Util {
     }
   }
 
+  /** Returns random elements from the encryption space as Strings, useful to generate
+    random encryptions faster than encrypting known plaintexts */
   def getRandomVotesStr(size: Int, generator: Element[_], publicKey: Element[_]) = {
     val elGamal = ElGamalEncryptionScheme.getInstance(generator)
 
@@ -52,6 +60,7 @@ object Util {
     }
   }
 
+  /** Encodes and encrypts the given plaintexts, using parallelism */
   def encryptVotes(plaintexts: Seq[Int], cSettings: CryptoSettings, publicKey: Element[_]) = {
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val encoder = ZModPrimeToGStarModSafePrime.getInstance(cSettings.group)
@@ -63,6 +72,7 @@ object Util {
     }.seq
   }
 
+  /** Returns the the public key corresponding to the input string */
   def getPublicKeyFromString(publicKey: String, generator: Element[_]) = {
     val elGamal = ElGamalEncryptionScheme.getInstance(generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
@@ -80,11 +90,16 @@ object Util {
    *
    *  .asInstanceOf[AbstractSet[_,_]].getElementFrom(string)
    *
+   *  This is employed in Verifier.
    */
   def fromString[A <: Element[B],B](set: AbstractSet[A, B], value: String): Element[B] = {
     set.getElementFrom(value)
   }
 
+  /** Returns independent generators for a cyclic group, using parallelism
+   *
+   *  Independent generators are necessaray for TW proofs of shuffle.
+   */
   def getIndependentGenerators[E <: Element[_]](group: AbstractCyclicGroup[E, _], skip: Int, size: Int): java.util.List[E] = {
     val split = generatorParallelism
     val total = size + skip
@@ -112,6 +127,7 @@ object Util {
     items.drop(skip).toList.asJava
   }
 
+  /** Returns the legendre symbol, optionally using native gmp code */
   def legendreSymbol(a: BigInteger, p: BigInteger): Int = {
     if(useGmp) {
       com.squareup.jnagmp.Gmp.kronecker(a, p)

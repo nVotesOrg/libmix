@@ -62,9 +62,15 @@ object Verifier extends ProofSettings {
 
   val logger = LoggerFactory.getLogger(Verifier.getClass)
 
-  def verifyKeyShare(share: EncryptionKeyShareDTO, Csettings: CryptoSettings, proverId: String) = {
+  /**
+   * Verifies a key share.
+   *
+   * Returns true if the proof is correct, false otherwise.
+   */
+  def verifyKeyShare(share: EncryptionKeyShareDTO, cSettings: CryptoSettings, proverId: String)
+    : Boolean = {
 
-    val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen: KeyPairGenerator = elGamal.getKeyPairGenerator();
     val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(share.keyShare)
     val proofFunction = keyPairGen.getPublicKeyGenerationFunction()
@@ -72,7 +78,7 @@ object Verifier extends ProofSettings {
     val otherInput: StringElement = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
 
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
-        Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
+        cSettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
 
     val pg: PlainPreimageProofSystem = PlainPreimageProofSystem.getInstance(challengeGenerator, proofFunction)
 
@@ -88,9 +94,15 @@ object Verifier extends ProofSettings {
     result
   }
 
-  def verifyPartialDecryption(pd: PartialDecryptionDTO, votes: Seq[Tuple], Csettings: CryptoSettings, proverId: String, publicShare: Element[_]) = {
+  /**
+   * Verifies a set of partial decryptions.
+   *
+   * Returns true if the proof is correct, false otherwise.
+   */
+  def verifyPartialDecryption(pd: PartialDecryptionDTO, votes: Seq[Tuple], cSettings: CryptoSettings,
+    proverId: String, publicShare: Element[_]): Boolean = {
 
-    val encryptionGenerator = Csettings.generator
+    val encryptionGenerator = cSettings.generator
     val generatorFunctions = votes.par.map { x: Tuple =>
       GeneratorFunction.getInstance(x.getFirst)
     }.seq
@@ -98,16 +110,16 @@ object Verifier extends ProofSettings {
     // Create proof functions
     val f1: Function = GeneratorFunction.getInstance(encryptionGenerator)
     val f2: Function = CompositeFunction.getInstance(
-        InvertFunction.getInstance(Csettings.group.getZModOrder()),
-        MultiIdentityFunction.getInstance(Csettings.group.getZModOrder(), generatorFunctions.length),
+        InvertFunction.getInstance(cSettings.group.getZModOrder()),
+        MultiIdentityFunction.getInstance(cSettings.group.getZModOrder(), generatorFunctions.length),
         ProductFunction.getInstance(generatorFunctions :_*))
 
-    val pdElements = pd.partialDecryptions.par.map(Csettings.group.asInstanceOf[AbstractSet[_,_]].getElementFrom(_)).seq
+    val pdElements = pd.partialDecryptions.par.map(cSettings.group.asInstanceOf[AbstractSet[_,_]].getElementFrom(_)).seq
 
     val publicInput: Pair = Pair.getInstance(publicShare, Tuple.getInstance(pdElements:_*))
     val otherInput = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
-        Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
+        cSettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
     val proofSystem: EqualityPreimageProofSystem = EqualityPreimageProofSystem.getInstance(challengeGenerator, f1, f2)
 
     val commitment = proofSystem.getCommitmentSpace().getElementFrom(pd.proofDTO.commitment)
@@ -122,27 +134,31 @@ object Verifier extends ProofSettings {
     result
   }
 
+  /**
+   * Verifies a a mix.
+   *
+   * Returns true if the proof is correct, false otherwise.
+   */
   def verifyShuffle(votes: Tuple, shuffledVotes: Tuple, shuffleProof: ShuffleProofDTO,
-    proverId: String, publicKey: Element[_], Csettings: CryptoSettings) = {
+    proverId: String, publicKey: Element[_], cSettings: CryptoSettings): Boolean = {
 
-    val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
 
     val otherInput: StringElement = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
-        Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
+        cSettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
 
     logger.info("Getting proof systems..")
 
-    // Create e-values challenge generator
     val ecg: ChallengeGenerator = PermutationCommitmentProofSystem.createNonInteractiveEValuesGenerator(
-        Csettings.group.getZModOrder(), votes.getArity())
+        cSettings.group.getZModOrder(), votes.getArity())
 
     val pcps: PermutationCommitmentProofSystem = PermutationCommitmentProofSystem.getInstance(challengeGenerator, ecg,
-      Csettings.group, votes.getArity())
+      cSettings.group, votes.getArity())
 
     val spg: ReEncryptionShuffleProofSystem = ReEncryptionShuffleProofSystem.getInstance(challengeGenerator, ecg, votes.getArity(), elGamal, publicKey)
 
-    val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(Csettings.group, votes.getArity())
+    val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(cSettings.group, votes.getArity())
 
     val permutationCommitment = Util.fromString(pcs.getCommitmentSpace(), shuffleProof.permutationCommitment)
 
@@ -156,11 +172,8 @@ object Verifier extends ProofSettings {
     // logger.info(s"deserialize commitment ${shuffleProof.mixProof.commitment}")
     // logger.info(s"commitmentspace ${spg.getCommitmentSpace}")
 
-    // FIXME remove  (conversion bug code)
-    // AbstractSet.debug = true;
+    // FIXME conversion bug code triggered here
     val commitment2 = spg.getCommitmentSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.mixProof.commitment)
-    // FIXME remove trace
-    // AbstractSet.debug = false;
 
     val challenge2 = spg.getChallengeSpace.getElementFrom(shuffleProof.mixProof.challenge)
     val response2 = spg.getResponseSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.mixProof.response)
@@ -172,18 +185,18 @@ object Verifier extends ProofSettings {
 
     // bridging commitments: GStarmod
     val bridgingCommitments = permutationProofDTO.bridgingCommitments.par.map { x =>
-      Util.fromString(Csettings.group, x)
+      Util.fromString(cSettings.group, x)
     }.seq
 
     logger.info("Converting permutation e values..")
 
     // evalues: ZMod
     val eValues = permutationProofDTO.eValues.par.map { x =>
-      Csettings.group.getZModOrder.getElementFrom(x)
+      cSettings.group.getZModOrder.getElementFrom(x)
     }.seq
     logger.info("Converting shuffle e values..")
     val eValues2 = mixProofDTO.eValues.par.map { x =>
-      Csettings.group.getZModOrder.getElementFrom(x)
+      cSettings.group.getZModOrder.getElementFrom(x)
     }.seq
 
     logger.info("Getting proof instances..")

@@ -39,7 +39,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
  * Functions needed for a keymaker trustee
  *
- * Creation of key shares and partial decryptions, along with necessary proofs
+ * Creation of key shares and partial decryptions, along with necessary proofs.
+ * Data is serialized into string composed DTO objects ready for transport.
  */
 trait KeyMaker extends ProofSettings {
 
@@ -51,7 +52,7 @@ trait KeyMaker extends ProofSettings {
    * The data is serialized and returned as a (EncryptionKeyShareDTO, String) tuple.
    * The second element of the tuple is the private share.
    */
-  def createShare(proverId: String, cSettings: CryptoSettings) = {
+  def createShare(proverId: String, cSettings: CryptoSettings): (EncryptionKeyShareDTO, String) = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
 
@@ -80,7 +81,8 @@ trait KeyMaker extends ProofSettings {
    *
    * The data is serialized and returned as a PartialDecryptionDTO
    */
-  def partialDecrypt(votes: Seq[Tuple], privateKey: Element[_], proverId: String, cSettings: CryptoSettings) = {
+  def partialDecrypt(votes: Seq[Tuple], privateKey: Element[_], proverId: String,
+    cSettings: CryptoSettings): PartialDecryptionDTO = {
 
     val encryptionGenerator = cSettings.generator
 
@@ -115,7 +117,8 @@ trait KeyMaker extends ProofSettings {
    * The data is serialized and returned as a SigmaProofDTO
    */
   private def createProof(proverId: String, secretKey: Element[_], publicKey: Element[_],
-    partialDecryptions: Seq[Element[_]], generatorFunctions: Seq[Function], cSettings: CryptoSettings) = {
+    partialDecryptions: Seq[Element[_]], generatorFunctions: Seq[Function], cSettings: CryptoSettings)
+    : SigmaProofDTO = {
 
     val encryptionGenerator = cSettings.generator
 
@@ -145,6 +148,9 @@ trait KeyMaker extends ProofSettings {
  * Functions needed for a mixer trustee
  *
  * Creation of shuffles and proofs (Terelius Wikstrom according to Locher-Haenni paper)
+ * Data is serialized into string composed DTO objects ready for transport. The
+ * exception to this rule is the private permutation data of the offline phase,
+ * which may not need to be transported.
  */
 trait Mixer extends ProofSettings {
 
@@ -156,9 +162,10 @@ trait Mixer extends ProofSettings {
    * Creates a permutation, its commitment and proof, for a known number of votes.
    *
    * The data is serialized and returned as a (PermutationProofDTO, PermutationData) tuple.
-   * The second element of the tuple is the private permutation data.
+   * The second element of the tuple is the private permutation data, which is not serialized.
    */
-  def preShuffle(voteCount: Int, publicKey: Element[_], cSettings: CryptoSettings, proverId: String) = {
+  def preShuffle(voteCount: Int, publicKey: Element[_], cSettings: CryptoSettings, proverId: String)
+    : (PermutationProofDTO, PermutationData) = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
 
@@ -207,12 +214,10 @@ trait Mixer extends ProofSettings {
   /**
    * Performs the online phase of the shuffle given offline permutation data
    *
-   *
-   *
    * The data is serialized and returned as a ShuffleResultDTO
    */
   def shuffle(ciphertexts: Tuple, pData: PermutationData, pdto: PermutationProofDTO,
-    publicKey: Element[_], cSettings: CryptoSettings, proverId: String) = {
+    publicKey: Element[_], cSettings: CryptoSettings, proverId: String): ShuffleResultDTO = {
 
     logger.info("Mixer: shuffle..")
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
@@ -249,7 +254,6 @@ trait Mixer extends ProofSettings {
 
     logger.info("Mixer: shuffle proof, generating..")
 
-    // shuffle proof
     val mixProof: Tuple = spg.generate(privateInputShuffle, publicInputShuffle)
     val eValues2: Tuple = spg.getEValues(mixProof).asInstanceOf[Tuple]
 
@@ -259,11 +263,10 @@ trait Mixer extends ProofSettings {
     // logger.info(s"*** commitment $commitment")
     // spg.getCommitmentSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(commitment)
 
-    // FIXME whether or not using parallel collection on eValues2.map here is good
     val mixProofDTO = MixProofDTO(spg.getCommitment(mixProof).convertToString,
       spg.getChallenge(mixProof).convertToString,
       spg.getResponse(mixProof).convertToString,
-      eValues2.asScala.map(x => x.convertToString).toSeq)
+      eValues2.asScala.par.map(x => x.convertToString).seq.toSeq)
 
     val shuffleProofDTO = ShuffleProofDTO(mixProofDTO, pdto, permutationCommitment.convertToString)
 
@@ -272,8 +275,13 @@ trait Mixer extends ProofSettings {
     ShuffleResultDTO(shuffleProofDTO, votesString)
   }
 
-  // shuffle with both offline and online phase
-  def shuffle(ciphertexts: Tuple, publicKey: Element[_], Csettings: CryptoSettings, proverId: String) = {
+  /**
+   * Performs the offline and online phase of the shuffle
+   *
+   * The data is serialized and returned as a ShuffleResultDTO
+   */
+  def shuffle(ciphertexts: Tuple, publicKey: Element[_], Csettings: CryptoSettings, proverId: String)
+    : ShuffleResultDTO  = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
 
@@ -287,12 +295,10 @@ trait Mixer extends ProofSettings {
 
     logger.info("Mixer: generators..")
 
-    // sigma challenge generator
     val otherInput: StringElement = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
         Csettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
 
-    // e-values challenge generator
     val ecg: ChallengeGenerator = PermutationCommitmentProofSystem.createNonInteractiveEValuesGenerator(
         Csettings.group.getZModOrder(), ciphertexts.getArity())
 
@@ -325,12 +331,10 @@ trait Mixer extends ProofSettings {
 
     logger.info("Mixer: shuffle..")
 
-    // shuffle
     val shuffledVs: Tuple = mixer.shuffle(ciphertexts, psi, rs)
 
     logger.info("Mixer: shuffle proof..")
 
-    // shuffle proof system
     val spg: ReEncryptionShuffleProofSystem = ReEncryptionShuffleProofSystem.getInstance(challengeGenerator, ecg, ciphertexts.getArity(), elGamal, publicKey)
 
     val privateInputShuffle: Tuple = Tuple.getInstance(psi, permutationCommitmentRandomizations, rs)
@@ -338,7 +342,6 @@ trait Mixer extends ProofSettings {
 
     logger.info("Mixer: shuffle proof, generating..")
 
-    // shuffle proof
     val mixProof: Tuple = spg.generate(privateInputShuffle, publicInputShuffle)
     val eValues2 = spg.getEValues(mixProof).asInstanceOf[Tuple]
 
@@ -347,11 +350,10 @@ trait Mixer extends ProofSettings {
     // logger.info(s"*** commitment $commitment")
     // spg.getCommitmentSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(commitment)
 
-    // FIXME whether or not using parallel collection on eValues2.map here is good
     val mixProofDTO = MixProofDTO(spg.getCommitment(mixProof).convertToString(),
       spg.getChallenge(mixProof).convertToString(),
       spg.getResponse(mixProof).convertToString(),
-      eValues2.asScala.map(x => x.convertToString).toSeq)
+      eValues2.asScala.par.map(x => x.convertToString).seq.toSeq)
 
     val permutationProofDTO = Await.result(permutationProofFuture, Duration.Inf)
 
