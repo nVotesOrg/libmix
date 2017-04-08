@@ -32,8 +32,8 @@ object Benchmark extends App {
   val cSettings = CryptoSettings(group, generator)
 
   // create shares
-  val (share1, private1) = KeyMakerTrustee.createShare(proverId1, cSettings)
-  val (share2, private2) = KeyMakerTrustee.createShare(proverId2, cSettings)
+  val (share1, private1) = KeyMakerTrustee.createKeyShare(proverId1, cSettings)
+  val (share2, private2) = KeyMakerTrustee.createKeyShare(proverId2, cSettings)
   val allShares = List(share1, share2)
 
   // verify shares
@@ -163,7 +163,7 @@ object KeyMakerTrustee extends KeyMaker {
 
     val (encryptionKeyShareDTO, privateKey) = createShare(id, cSettings)
 
-    (encryptionKeyShareDTO, privateKey)
+    (encryptionKeyShareDTO, privateKey.convertToString)
   }
 
   /** Partially decrypt a ciphertext with the private part of a share

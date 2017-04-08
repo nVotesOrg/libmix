@@ -49,10 +49,10 @@ trait KeyMaker extends ProofSettings {
   /**
    * Creates a public key share, the private share, and a proof
    *
-   * The data is serialized and returned as a (EncryptionKeyShareDTO, String) tuple.
-   * The second element of the tuple is the private share.
+   * The public encryption data is serialized, returning an (EncryptionKeyShareDTO, Element) tuple.
+   * The second element of the tuple is the private share, a unicrypt Element.
    */
-  def createShare(proverId: String, cSettings: CryptoSettings): (EncryptionKeyShareDTO, String) = {
+  def createShare(proverId: String, cSettings: CryptoSettings): (EncryptionKeyShareDTO, Element[_]) = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
 
@@ -73,7 +73,7 @@ trait KeyMaker extends ProofSettings {
 
     val sigmaProofDTO = SigmaProofDTO(pg.getCommitment(proof).convertToString(), pg.getChallenge(proof).convertToString(), pg.getResponse(proof).convertToString())
 
-    (EncryptionKeyShareDTO(sigmaProofDTO, publicKey.convertToBigInteger().toString), privateKey.convertToBigInteger().toString)
+    (EncryptionKeyShareDTO(sigmaProofDTO, publicKey.convertToBigInteger().toString), privateKey)
   }
 
   /**
@@ -161,7 +161,7 @@ trait Mixer extends ProofSettings {
    *
    * Creates a permutation, its commitment and proof, for a known number of votes.
    *
-   * The data is serialized and returned as a (PermutationProofDTO, PermutationData) tuple.
+   * The public permutation data is serialized, returning as a (PermutationProofDTO, PermutationData) tuple.
    * The second element of the tuple is the private permutation data, which is not serialized.
    */
   def preShuffle(voteCount: Int, publicKey: Element[_], cSettings: CryptoSettings, proverId: String)
