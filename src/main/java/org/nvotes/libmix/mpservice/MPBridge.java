@@ -169,14 +169,6 @@ public class MPBridge {
     	return i().modulus;
     }
 
-	public static boolean isRecording() {
-		return i().recording;
-	}
-
-	public static boolean isReplaying() {
-		return i().replaying;
-	}
-
 	public static void shutdown() {
 		MPService.shutdown();
 	}
