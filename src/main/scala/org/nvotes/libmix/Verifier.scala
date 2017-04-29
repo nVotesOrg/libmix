@@ -148,7 +148,7 @@ object Verifier extends ProofSettings {
     val challengeGenerator: SigmaChallengeGenerator = FiatShamirSigmaChallengeGenerator.getInstance(
         cSettings.group.getZModOrder(), otherInput, convertMethod, hashMethod, converter)
 
-    logger.info("Getting proof systems..")
+    logger.debug("Getting proof systems..")
 
     val ecg: ChallengeGenerator = PermutationCommitmentProofSystem.createNonInteractiveEValuesGenerator(
         cSettings.group.getZModOrder(), votes.getArity())
@@ -162,7 +162,7 @@ object Verifier extends ProofSettings {
 
     val permutationCommitment = Util.fromString(pcs.getCommitmentSpace(), shuffleProof.permutationCommitment)
 
-    logger.info("Getting values..")
+    logger.debug("Getting values..")
 
     val commitment1 = Util.fromString(pcps.getCommitmentSpace(), shuffleProof.permutationProof.commitment)
     val challenge1 = pcps.getChallengeSpace.getElementFrom(shuffleProof.permutationProof.challenge)
@@ -181,14 +181,14 @@ object Verifier extends ProofSettings {
     val permutationProofDTO = shuffleProof.permutationProof
     val mixProofDTO = shuffleProof.mixProof
 
-    logger.info("Converting bridging commitments..")
+    logger.debug("Converting bridging commitments..")
 
     // bridging commitments: GStarmod
     val bridgingCommitments = permutationProofDTO.bridgingCommitments.par.map { x =>
       Util.fromString(cSettings.group, x)
     }.seq
 
-    logger.info("Converting permutation e values..")
+    logger.debug("Converting permutation e values..")
 
     // evalues: ZMod
     val eValues = permutationProofDTO.eValues.par.map { x =>
@@ -199,16 +199,16 @@ object Verifier extends ProofSettings {
       cSettings.group.getZModOrder.getElementFrom(x)
     }.seq
 
-    logger.info("Getting proof instances..")
+    logger.debug("Getting proof instances..")
     val permutationProof: Tuple = Tuple.getInstance(Util.tupleFromSeq(eValues), Util.tupleFromSeq(bridgingCommitments),
       commitment1, challenge1, response1)
     val mixProof: Tuple = Tuple.getInstance(Util.tupleFromSeq(eValues2), commitment2, challenge2, response2)
 
-    logger.info("Getting public inputs..")
+    logger.debug("Getting public inputs..")
     val publicInputShuffle: Tuple = Tuple.getInstance(permutationCommitment, votes, shuffledVotes)
     val publicInputPermutation = permutationCommitment
 
-    logger.info("Verifying..")
+    logger.debug("Verifying..")
     val v1 = pcps.verify(permutationProof, publicInputPermutation)
 
     val v2 = spg.verify(mixProof, publicInputShuffle)
