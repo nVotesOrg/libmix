@@ -115,7 +115,7 @@ public class MPBridge {
 	 	long now = System.currentTimeMillis();
 	 	T ret = f.get();
 	 	long r = System.currentTimeMillis() - now;
-	 	logger.info("Record: [" + r + " ms]");
+	 	logger.trace("Record: [" + r + " ms]");
 	 	ModPow2[] reqs = stopRecord();
 		b(3);
 		if(reqs.length > 0) {
@@ -125,7 +125,7 @@ public class MPBridge {
 			startReplay(answers);
 			ret = f.get();
 			long t = System.currentTimeMillis() - now;
-			logger.info("Compute: [" + c + " ms] R+C: [" + (r+c) + " ms] Total: [" + t + " ms]");
+			logger.trace("Compute: [" + c + " ms] R+C: [" + (r+c) + " ms] Total: [" + t + " ms]");
 			stopReplay();
 		}
 		reset();
@@ -208,7 +208,7 @@ public class MPBridge {
 	 	long now = System.currentTimeMillis();
 	 	T ret = f.get();
 	 	long r = System.currentTimeMillis() - now;
-	 	logger.info("R: [" + r + " ms]");
+	 	logger.trace("R: [" + r + " ms]");
 	 	ModPow2[] reqs = stopRecord();
 		b(3);
 		if(reqs.length > 0) {
@@ -220,7 +220,7 @@ public class MPBridge {
 			startReplayDebug(answers);
 			ret = f.get();
 			long t = System.currentTimeMillis() - now;
-			logger.info("\nC: [" + c + " ms] T: [" + t + " ms] R+C: [" + (r+c) + " ms]");
+			logger.trace("\nC: [" + c + " ms] T: [" + t + " ms] R+C: [" + (r+c) + " ms]");
 
 			stopReplayDebug();
 		}
@@ -242,6 +242,6 @@ public class MPBridge {
 		StackTraceElement[] traces = Thread.currentThread().getStackTrace();
 		StackTraceElement caller = traces[trace];
 		long diffTime = System.currentTimeMillis() - i.beforeTime;
-		logger.info(">>> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diffTime + " ms]" + " (" + total + ")");
+		logger.trace(">>> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diffTime + " ms]" + " (" + total + ")");
 	}
 }
