@@ -30,16 +30,23 @@ case class SigmaProofDTO(commitment: String, challenge: String, response: String
 
 /** A key share, composed of the proof and public share */
 case class EncryptionKeyShareDTO(sigmaProofDTO: SigmaProofDTO, keyShare: String)
+
 /** A partial decryption of ciphertexts, and corresponding proof
 	The partial decryption is obtained applying the private part of the share*/
 case class PartialDecryptionDTO(partialDecryptions: Seq[String], proofDTO: SigmaProofDTO)
 
 /** A mix of ciphertexts, with all associated proofs */
 case class ShuffleResultDTO(shuffleProof: ShuffleProofDTO, votes: Seq[String])
+
 /** Combination of offline and online parts of the proof */
 case class ShuffleProofDTO(mixProof: MixProofDTO, permutationProof: PermutationProofDTO, permutationCommitment: String)
+
 /** Proof for the offline part of the mix, permutation */
 case class PermutationProofDTO(commitment: String, challenge: String, response: String,
   bridgingCommitments: Seq[String], eValues: Seq[String])
+
 /** Proof for the online part of the mix */
 case class MixProofDTO(commitment: String, challenge: String, response: String, eValues: Seq[String])
+
+/** Data for the offline phase of the mix: private permutation data + proof */
+case class PermutationDTO(permutation: String, randomizations: String, proof: PermutationProofDTO)

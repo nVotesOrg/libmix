@@ -12,7 +12,16 @@ import org.slf4j.LoggerFactory;
 
 import org.nvotes.libmix.Util;
 
+/**
+ *  Bridges modpow calls into a faster implementation, provided by MPService
+ *
+ *	The bridge is implemented with a per-thread record/replay mechanism
+ *  that captures modpow calls inside a closure scope. The requests
+ *  are then passed to MPService. The results are passed back into
+ *  the closure on a second replay run.
+ */
 public class MPBridge {
+	private final static Logger logger = LoggerFactory.getLogger(MPBridge.class);
 
 	private static boolean useGmp = Util.getEnvBoolean("libmix.gmp");
 	private static boolean useExtractor = Util.getEnvBoolean("libmix.extractor");
@@ -26,29 +35,29 @@ public class MPBridge {
 	private LinkedList<ModPow2> requests = new LinkedList<ModPow2>();
 	private List<BigInteger> answers = null;
 
-	private final static Logger logger = LoggerFactory.getLogger(MPBridge.class);
-
+	/**
+	 *	Allows extraction from multithreaded code, creating one
+	 *  MPBridge object per thread.
+	 */
 	private static ThreadLocal<MPBridge> instance = new ThreadLocal<MPBridge>() {
 		@Override protected MPBridge initialValue() {
 			return new MPBridge();
         }
 	};
 
-	public static void init() {
-		logger.info("***************************************************");
-		logger.info("* MPBridge INIT");
-		logger.info("*");
-		logger.info("* useGmp: " + useGmp);
-		logger.info("* useExtractor: " + useExtractor);
-		logger.info("* MPService implementation: " + MPService.toString());
-		MPService.init();
-		logger.info("***************************************************");
-	}
-
+	/**
+	 *	Returns the MPBridge instance associated with the calling thread.
+	 */
 	public static MPBridge i() {
 		return instance.get();
 	}
 
+	/**
+	 *	Starts the recording phase.
+	 *
+	 *  The passed in value will be returned as the dummy result of
+	 *  modpow calls during the record phase.
+	 */
 	public static void startRecord(String value) {
 		i().dummy = new BigInteger(value);
 		if(i().requests.size() != 0)	throw new IllegalStateException();
@@ -56,16 +65,30 @@ public class MPBridge {
 		i().modulus = null;
 	}
 
+	/**
+	 *	Starts the recording phase.
+	 *
+	 *  Modpow calls will be returned the default dummy value of 2.
+	 */
 	public static void startRecord() {
 		startRecord("2");
 	}
 
+	/**
+	 *	Stops the recording, returning all collected modpows.
+	 */
 	public static ModPow2[] stopRecord() {
 		i().recording = false;
 
 		return i().requests.toArray(new ModPow2[0]);
 	}
 
+	/**
+	 *	Starts the replaying phase.
+	 *
+	 *  Modpow requests will be given results computed
+	 *  by MPService.
+	 */
 	public static void startReplay(BigInteger[] answers_) {
 		if(answers_.length != i().requests.size()) throw new IllegalArgumentException(answers_.length + "!=" + i().requests.size());
 		i().answers = new LinkedList<BigInteger>(Arrays.asList(answers_));
@@ -73,16 +96,25 @@ public class MPBridge {
 		i().replaying = true;
 	}
 
+	/**
+	 *	Stops the replaying phase.
+	 */
 	public static void stopReplay() {
 		if(i().answers.size() != 0) throw new IllegalStateException();
 
 		i().replaying = false;
 	}
 
+	/**
+	 *	Resets this MPBridge instance.
+	 */
 	public static void reset() {
 		i().requests.clear();
 	}
 
+	/**
+	 *	Adds a modpow request to the list to be computed by MPService.
+	 */
 	public static void addModPow(BigInteger base, BigInteger pow, BigInteger mod) {
 		MPBridge i = i();
 		if(!i.recording) throw new IllegalStateException();
@@ -97,18 +129,31 @@ public class MPBridge {
 		i.requests.add(new ModPow2(base, pow));
 	}
 
+	/**
+	 *	Returns the recorded requests.
+	 */
 	public static LinkedList<ModPow2> getRequests() {
 		if(i().recording) throw new IllegalStateException();
 
 		return i().requests;
 	}
 
+	/**
+	 *	Returns a result, as calculated by MPService.
+	 */
 	public static BigInteger getModPow() {
 		if(i().recording) throw new IllegalStateException();
 
 		return i().answers.remove(0);
 	}
 
+	/**
+	 *	Extracts modpow calls from the given closure.
+	 *
+	 *  The closure is first executed in record mode, where modpow requests are saved.
+	 *  The requests are computed by MPService.
+	 *  The closure is then executed in replay mode, returning the computed values.
+	 */
 	public static <T> T par(Supplier<T> f, String v) {
 		a();
 	 	startRecord(v);
@@ -133,10 +178,23 @@ public class MPBridge {
 		return ret;
 	}
 
+	/**
+	 *	Extracts modpow calls from the given closure.
+	 *
+	 *  Uses the default dummy value of 2
+	 */
 	public static <T> T par(Supplier<T> f) {
 		return par(f, "2");
 	}
 
+	/**
+	 *	Method to intercept modpow calls.
+	 *
+	 *  For extraction to work, the target code must call this version
+	 *  of modpow. If recording is activated, adds the request and returns
+	 *  the dummy value. If replaying, returns the result computed by
+	 *  MPService.
+	 */
 	public static BigInteger modPow(BigInteger base, BigInteger pow, BigInteger mod) {
         MPBridge i = i();
         if(i.recording) {
@@ -165,13 +223,13 @@ public class MPBridge {
         }
     }
 
+    /**
+     *	Returns the modulus common to all modpow requests.
+     *
+     */
     public static BigInteger getModulus() {
     	return i().modulus;
     }
-
-	public static void shutdown() {
-		MPService.shutdown();
-	}
 
 	/****************************** DEBUG STUFF ****************************/
 

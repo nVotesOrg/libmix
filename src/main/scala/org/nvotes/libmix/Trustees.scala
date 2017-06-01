@@ -214,6 +214,19 @@ trait Mixer extends ProofSettings {
   }
 
   /**
+   * Performs the offline phase of the shuffle
+   *
+   * Unlike the core method above, this method returns all data serialized
+   */
+  def preShuffleAlt(voteCount: Int, publicKey: Element[_], cSettings: CryptoSettings, proverId: String)
+    : PermutationDTO = {
+
+    val (permutationProofDTO, pData) = preShuffle(voteCount, publicKey, cSettings, proverId)
+    PermutationDTO(pData.permutation.convertToString,
+      pData.randomizations.convertToString, permutationProofDTO)
+  }
+
+  /**
    * Performs the online phase of the shuffle given offline permutation data
    *
    * The data is serialized and returned as a ShuffleResultDTO
@@ -225,8 +238,6 @@ trait Mixer extends ProofSettings {
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val mixer: ReEncryptionMixer = ReEncryptionMixer.getInstance(elGamal, publicKey, ciphertexts.getArity)
     val rs: Tuple = mixer.generateRandomizations()
-    // in case we need to serialize perm data as strings
-    // val psi: PermutationElement = mixer.getPermutationGroup().getElementFrom(pre.permutation)
     val psi: PermutationElement = pData.permutation
 
     // shuffle
@@ -245,8 +256,6 @@ trait Mixer extends ProofSettings {
 
     val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(cSettings.group, ciphertexts.getArity)
 
-    // in case we need to serialize perm data as strings
-    // val permutationCommitmentRandomizations: Tuple = Util.fromString(pcs.getRandomizationSpace(), pre.randomizations).asInstanceOf[Tuple]
     val permutationCommitmentRandomizations: Tuple = pData.randomizations
 
     val permutationCommitment: Tuple = pcs.commit(psi, permutationCommitmentRandomizations)
@@ -278,13 +287,35 @@ trait Mixer extends ProofSettings {
   }
 
   /**
+   * Performs the online phase of the shuffle given _serialized_
+   * offline permutation data.
+   *
+   * This method is an adapter for the core method above, which takes
+   * private permutation data as native unicrypt objects
+   *
+   * The data is serialized and returned as a ShuffleResultDTO
+   */
+  def shuffle(ciphertexts: Tuple, pdto: PermutationDTO,
+    publicKey: Element[_], cSettings: CryptoSettings, proverId: String): ShuffleResultDTO = {
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
+    val mixer: ReEncryptionMixer = ReEncryptionMixer.getInstance(elGamal, publicKey, ciphertexts.getArity)
+    val psi: PermutationElement = mixer.getPermutationGroup().getElementFrom(pdto.permutation)
+
+    val pcs: PermutationCommitmentScheme = PermutationCommitmentScheme.getInstance(cSettings.group, ciphertexts.getArity)
+    val permutationCommitmentRandomizations: Tuple = Util.fromString(pcs.getRandomizationSpace(), pdto.randomizations).asInstanceOf[Tuple]
+
+    val pData = PermutationData(psi, permutationCommitmentRandomizations)
+
+    shuffle(ciphertexts, pData, pdto.proof, publicKey, cSettings, proverId)
+  }
+
+  /**
    * Performs the offline and online phase of the shuffle
    *
    * The data is serialized and returned as a ShuffleResultDTO
    */
   def shuffle(ciphertexts: Tuple, publicKey: Element[_], Csettings: CryptoSettings, proverId: String)
     : ShuffleResultDTO  = {
-
 
     logger.debug("Mixer: shuffle (offline + online)..")
 

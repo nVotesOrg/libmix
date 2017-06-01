@@ -21,7 +21,7 @@ case class ModPow(base: BigInteger, pow: BigInteger, mod: BigInteger)
 case class ModPow2(base: BigInteger, pow: BigInteger)
 
 /**
- * Represents a modular exponentiation operation with common modulus and result
+ * Represents a modpow result, together with the request parameters
  */
 case class ModPowResult(base: BigInteger, pow: BigInteger, mod: BigInteger, result: BigInteger)
 
@@ -76,9 +76,6 @@ object MPBridgeS {
 
     ret
   }
-
-  def init() = MPBridge.init()
-  def shutdown = MPBridge.shutdown
 }
 
 object SequentialModPowService extends ModPowService {
