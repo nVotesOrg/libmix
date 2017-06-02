@@ -8,7 +8,7 @@ A mixnet library built on top of [unicrypt](https://github.com/bfh-evg/univote2)
 * Patches to the unicrypt library for optimisation (parallelism, native code)
 * A benchmark simulating the crypto for a full election cycle
 
-See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance numbers.
+See [here](https://nvotes.com/parallelizing-a-mixnet-prototype/) for performance numbers. See [here](https://nvotesorg.github.io/nMix/benchmarks.html) for performance numbers when used in the nMix protocol.
 
 ### Running the benchmark
 
@@ -83,8 +83,9 @@ To speed up HybridRandomByteSequence under linux install rng-tools.
 * Readded unicrypt parallelism optimizations
 * Added support for offline + online phase split
 * Added sl4j tracing
+* MPBridge clean up
 
 ### Work to do
 
 * Revise configuration mechanism
-* MPBridge clean up
+* Revisit clustering

@@ -65,7 +65,7 @@ object MPService extends ModPowService {
 /** Sequential ModPowService implementation
  *
  *  This implementation has no benefits over un-extracted modpows
- *  it is here for consistency
+ *  it is here for consistency.
  */
 object SequentialModPowService extends ModPowService {
   /** Compute modular exponentiation for a list of inputs */
@@ -83,7 +83,7 @@ object SequentialModPowService extends ModPowService {
 /** Parallel and native ModPowService implementation
  *
  *  Uses both parallelism and native modpow calls.
- *  Uses scala parllel collections to parallelize modpow calls.
+ *  Uses scala parallel collections to parallelize modpow calls.
  *  Uses GMP (via jna-gmp) to make native modpow calls
  */
 object GmpParallelModPowService extends ModPowService {
@@ -105,7 +105,7 @@ object GmpParallelModPowService extends ModPowService {
 
 /** Parallel and native ModPowService implementation
  *
- *  Uses scala parllel collections to parallelize modpow calls
+ *  Uses scala parllel collections to parallelize modpow calls.
  */
 object ParallelModPowService extends ModPowService {
   /** Compute modular exponentiation for a list of inputs */
@@ -122,7 +122,7 @@ object ParallelModPowService extends ModPowService {
 
 /** Scala version of MPBridge
  *
- *  NOTE: Currently unused
+ *  NOTE: Currently unused.
  */
 object MPBridgeScala {
 
@@ -130,7 +130,7 @@ object MPBridgeScala {
 
   /** Extract modpows from the given function
    *
-   *  Uses MPBridge record/replay mechanism
+   *  Uses MPBridge record/replay mechanism.
    */
   def ex[T](f: => T, v: String) = {
     MPBridge.a()
