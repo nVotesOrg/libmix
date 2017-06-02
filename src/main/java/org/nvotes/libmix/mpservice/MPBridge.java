@@ -5,15 +5,15 @@ import java.util.List;
 import java.util.Arrays;
 import java.math.BigInteger;
 import java.util.function.Supplier;
-import com.squareup.jnagmp.Gmp;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.squareup.jnagmp.Gmp;
 import org.nvotes.libmix.Util;
 
 /**
- *  Bridges modpow calls into a faster implementation, provided by MPService
+ *  Bridges modpow calls into a faster implementation, provided by MPService.
  *
  *	The bridge is implemented with a per-thread record/replay mechanism
  *  that captures modpow calls inside a closure scope. The requests

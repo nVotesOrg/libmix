@@ -37,8 +37,6 @@ import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractSet
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import mpservice.MPBridgeS
-
 /**
  * Proof settings common for proof generators and verifiers
  *

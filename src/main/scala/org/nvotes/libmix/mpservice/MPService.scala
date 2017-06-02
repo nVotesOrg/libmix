@@ -29,30 +29,109 @@ case class ModPowResult(base: BigInteger, pow: BigInteger, mod: BigInteger, resu
  * The mpservice public api
  */
 trait ModPowService {
-  // compute modular exponentiation for a list of inputs
+  /** Compute modular exponentiation for a list of inputs */
   def compute(work: Array[ModPow]): Array[BigInteger]
-  // compute modular exponentiation for a list of inputs with common modulus
+
+  /** Compute modular exponentiation for a list of inputs with common modulus */
   def compute(work: Array[ModPow2], mod: BigInteger): Array[BigInteger]
 
+  /** Compute modular exponentiation for a list of inputs
+   *
+   *  Returns (also) the inputs to the computation to allow checking for consistency.
+   */
   def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult]
 }
 
+/**
+ * Entrypoint for the implementation of the service.
+ */
 object MPService extends ModPowService {
+  /** The underlying service */
   val service = GmpParallelModPowService
 
+  /** Compute modular exponentiation for a list of inputs */
   def compute(work: Array[ModPow]): Array[BigInteger] = service.compute(work)
+
+  /** Compute modular exponentiation for a list of inputs with common modulus */
   def compute(work: Array[ModPow2], mod: BigInteger): Array[BigInteger] = service.compute(work, mod)
+
+  /** Compute modular exponentiation for a list of inputs, returns inputs also */
   def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult] = service.computeDebug(work, mod)
 
-  def shutdown = service.shutdown
-  def init = {}
   override def toString = service.getClass.toString
 }
 
-object MPBridgeS {
 
-  val logger = LoggerFactory.getLogger(MPBridgeS.getClass)
+/** Sequential ModPowService implementation
+ *
+ *  This implementation has no benefits over un-extracted modpows
+ *  it is here for consistency
+ */
+object SequentialModPowService extends ModPowService {
+  /** Compute modular exponentiation for a list of inputs */
+  def compute(work: Array[ModPow]): Array[BigInteger] = work.map(x => x.base.modPow(x.pow, x.mod))
 
+  /** Compute modular exponentiation for a list of inputs with common modulus */
+  def compute(work: Array[ModPow2], mod: BigInteger): Array[BigInteger] = work.map(x => x.base.modPow(x.pow, mod))
+
+  /** Compute modular exponentiation for a list of inputs, returns inputs also */
+  def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult] = {
+    work.map(x => ModPowResult(x.base, x.pow, mod, x.base.modPow(x.pow, mod))).seq.toArray
+  }
+}
+
+/** Parallel and native ModPowService implementation
+ *
+ *  Uses both parallelism and native modpow calls.
+ *  Uses scala parllel collections to parallelize modpow calls.
+ *  Uses GMP (via jna-gmp) to make native modpow calls
+ */
+object GmpParallelModPowService extends ModPowService {
+  /** Compute modular exponentiation for a list of inputs */
+  def compute(work: Array[ModPow]): Array[BigInteger] = {
+    work.par.map(x => Gmp.modPowInsecure(x.base, x.pow, x.mod)).seq.toArray
+  }
+
+  /** Compute modular exponentiation for a list of inputs with common modulus */
+  def compute(work: Array[ModPow2], mod: BigInteger): Array[BigInteger] = {
+    work.par.map(x => Gmp.modPowInsecure(x.base, x.pow, mod)).seq.toArray
+  }
+
+  /** Compute modular exponentiation for a list of inputs, returns inputs also */
+  def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult] = {
+    work.par.map(x => ModPowResult(x.base, x.pow, mod, Gmp.modPowInsecure(x.base, x.pow, mod))).seq.toArray
+  }
+}
+
+/** Parallel and native ModPowService implementation
+ *
+ *  Uses scala parllel collections to parallelize modpow calls
+ */
+object ParallelModPowService extends ModPowService {
+  /** Compute modular exponentiation for a list of inputs */
+  def compute(work: Array[ModPow]): Array[BigInteger] = work.par.map(x => x.base.modPow(x.pow, x.mod)).seq.toArray
+
+  /** Compute modular exponentiation for a list of inputs with common modulus */
+  def compute(work: Array[ModPow2], mod: BigInteger): Array[BigInteger] = work.par.map(x => x.base.modPow(x.pow, mod)).seq.toArray
+
+  /** Compute modular exponentiation for a list of inputs, returns inputs also */
+  def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult] = {
+    work.par.map(x => ModPowResult(x.base, x.pow, mod, x.base.modPow(x.pow, mod))).seq.toArray
+  }
+}
+
+/** Scala version of MPBridge
+ *
+ *  NOTE: Currently unused
+ */
+object MPBridgeScala {
+
+  val logger = LoggerFactory.getLogger(MPBridgeScala.getClass)
+
+  /** Extract modpows from the given function
+   *
+   *  Uses MPBridge record/replay mechanism
+   */
   def ex[T](f: => T, v: String) = {
     MPBridge.a()
     MPBridge.startRecord(v)
@@ -76,33 +155,4 @@ object MPBridgeS {
 
     ret
   }
-}
-
-object SequentialModPowService extends ModPowService {
-  def compute(work: Array[ModPow]): Array[BigInteger] = work.map(x => x.base.modPow(x.pow, x.mod))
-  def compute(work: Array[ModPow2], mod: BigInteger): Array[BigInteger] = work.map(x => x.base.modPow(x.pow, mod))
-  def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult] = {
-    work.map(x => ModPowResult(x.base, x.pow, mod, x.base.modPow(x.pow, mod))).seq.toArray
-  }
-}
-object GmpParallelModPowService extends ModPowService {
-  def compute(work: Array[ModPow]): Array[BigInteger] = {
-    work.par.map(x => Gmp.modPowInsecure(x.base, x.pow, x.mod)).seq.toArray
-  }
-  def compute(work: Array[ModPow2], mod: BigInteger): Array[BigInteger] = {
-    work.par.map(x => Gmp.modPowInsecure(x.base, x.pow, mod)).seq.toArray
-  }
-  def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult] = {
-    work.par.map(x => ModPowResult(x.base, x.pow, mod, Gmp.modPowInsecure(x.base, x.pow, mod))).seq.toArray
-  }
-
-  def shutdown = {}
-}
-object ParallelModPowService extends ModPowService {
-  def compute(work: Array[ModPow]): Array[BigInteger] = work.par.map(x => x.base.modPow(x.pow, x.mod)).seq.toArray
-  def compute(work: Array[ModPow2], mod: BigInteger): Array[BigInteger] = work.par.map(x => x.base.modPow(x.pow, mod)).seq.toArray
-  def computeDebug(work: Array[ModPow2], mod: BigInteger): Array[ModPowResult] = {
-    work.par.map(x => ModPowResult(x.base, x.pow, mod, x.base.modPow(x.pow, mod))).seq.toArray
-  }
-  def shutdown = {}
 }

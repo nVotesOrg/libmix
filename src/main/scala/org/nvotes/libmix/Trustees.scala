@@ -1,5 +1,10 @@
 package org.nvotes.libmix
 
+import scala.collection.JavaConverters._
+import scala.concurrent._
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import ch.bfh.unicrypt.crypto.mixer.classes.ReEncryptionMixer
 import ch.bfh.unicrypt.crypto.proofsystem.challengegenerator.classes.FiatShamirSigmaChallengeGenerator
 import ch.bfh.unicrypt.crypto.proofsystem.challengegenerator.interfaces.ChallengeGenerator
@@ -29,12 +34,6 @@ import ch.bfh.unicrypt.math.function.interfaces.Function
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-import mpservice.MPBridgeS
-import scala.collection.JavaConverters._
-import scala.concurrent._
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Functions needed for a keymaker trustee
@@ -91,24 +90,23 @@ trait KeyMaker extends ProofSettings {
     val decryptionKey = secretKey.invert()
     val publicKey = encryptionGenerator.selfApply(secretKey)
 
-    val generators = votes.par.map { v =>
-      val element = v.getFirst()
+    val lists = votes.par.map { v=>
+      val g1 = v.getFirst()
       // FIXME ask Rolf about this
-      if(element.convertToString == "1") {
+      if(g1.convertToString == "1") {
         logger.error("********** Crash incoming!")
       }
 
-      GeneratorFunction.getInstance(element)
-    }.seq
-
-    val lists = MPBridgeS.ex(generators.map{ generator =>
+      val generator = GeneratorFunction.getInstance(g1)
       val partialDecryption = generator.apply(decryptionKey).asInstanceOf[GStarModElement]
-      (partialDecryption, generator)
-    }, "2").unzip
+      val partialDecryptionStr = partialDecryption.convertToString
+
+      (partialDecryption, generator, partialDecryptionStr)
+    }.seq.unzip3
 
     val proofDTO = createProof(proverId, secretKey, publicKey, lists._1, lists._2, cSettings)
 
-    PartialDecryptionDTO(lists._1.par.map(_.convertToString).seq, proofDTO)
+    PartialDecryptionDTO(lists._3, proofDTO)
   }
 
   /**
