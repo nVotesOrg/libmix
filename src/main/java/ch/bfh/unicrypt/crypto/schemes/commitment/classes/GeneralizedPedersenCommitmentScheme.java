@@ -1,4 +1,4 @@
-// drb MPBridge.par
+// drb MPBridge.run
 /*
  * UniCrypt
  *
@@ -95,7 +95,7 @@ public class GeneralizedPedersenCommitmentScheme
 	protected Function abstractGetCommitmentFunction() {
 		final Function[] generatorFunctions = new Function[this.size];
 
-		MPBridge.par(() -> {
+		MPBridge.run(() -> {
 			for (int i = 0; i < this.size; i++) {
 				generatorFunctions[i] = GeneratorFunction.getInstance(this.messageGenerators.getAt(i));
 			}

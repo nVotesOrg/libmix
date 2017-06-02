@@ -1,4 +1,4 @@
-// drb MPBridge.ex and generators and bad loop trace
+// drb MPBridge.run and generators and bad loop trace
 /*
  * UniCrypt
  *
@@ -224,7 +224,7 @@ public class PermutationCommitmentProofSystem
 
 		final Element[] temp = new Element[this.size];
 		final Tuple ePrimeVFinal = ePrimeV;
-		MPBridge.par(() -> {
+		MPBridge.run(() -> {
 			for (int i = 0; i < this.size; i++) {
 				temp[i] = g.selfApply(rV.getAt(i));  //   [2n]
 				if (i > 0) {
@@ -330,7 +330,7 @@ public class PermutationCommitmentProofSystem
 		}
 		Element innerProduct = ((Group) t1.getSet().getAt(0)).getIdentityElement();
 
-		Element ret = MPBridge.par(() -> {
+		Element ret = MPBridge.run(() -> {
 			Element ip = innerProduct;
 			for (int i = 0; i < t1.getArity(); i++) {
 				ip = ip.apply(t1.getAt(i).selfApply(t2.getAt(i)));
@@ -397,7 +397,7 @@ public class PermutationCommitmentProofSystem
 			//	pV[i + 2] = g.selfApply(rV.getAt(i)).apply(c_i_1.selfApply(ePrimeV.getAt(i)));
 			// }
 			final Element[] temp = new Element[this.size];
-			MPBridge.par(() -> {
+			MPBridge.run(() -> {
 				for (int i = 0; i < this.size; i++) {
 					Element c_i_1 = i == 0 ? this.h : this.cV.getAt(i - 1);
 					temp[i] = c_i_1.selfApply(ePrimeV.getAt(i));
@@ -405,7 +405,7 @@ public class PermutationCommitmentProofSystem
 				return temp;
 			}, "2");
 
-			MPBridge.par(() -> {
+			MPBridge.run(() -> {
 				for (int i = 0; i < this.size; i++) {
 					pV[i + 2] = g.selfApply(rV.getAt(i)).apply(temp[i]);
 				}

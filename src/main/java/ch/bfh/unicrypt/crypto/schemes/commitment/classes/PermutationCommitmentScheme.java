@@ -1,4 +1,4 @@
-// drb MPBridge.par and generators
+// drb MPBridge.run and generators
 /*
  * UniCrypt
  *
@@ -151,7 +151,7 @@ public class PermutationCommitmentScheme
 			final Tuple randomizations = (Tuple) element.getSecond();
 			final Element[] ret = new Element[size];
 
-			MPBridge.par(() -> {
+			MPBridge.run(() -> {
 				for (int i = 0; i < size; i++) {
 					ret[i] = randomizationGenerator.selfApply(randomizations.getAt(i)).apply(
 					   messageGenerators.getAt(permutation.permute(i)));

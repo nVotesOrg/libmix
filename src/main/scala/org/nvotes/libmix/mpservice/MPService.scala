@@ -1,7 +1,8 @@
 package org.nvotes.libmix.mpservice
 
-import scala.concurrent.duration.DurationInt
 import java.math.BigInteger
+
+import scala.concurrent.duration.DurationInt
 import scala.collection._
 import scala.util.Try
 import scala.util.Success
@@ -26,7 +27,7 @@ case class ModPow2(base: BigInteger, pow: BigInteger)
 case class ModPowResult(base: BigInteger, pow: BigInteger, mod: BigInteger, result: BigInteger)
 
 /**
- * The mpservice public api
+ * The MPService public api
  */
 trait ModPowService {
   /** Compute modular exponentiation for a list of inputs */

@@ -1,4 +1,4 @@
-// drb MPBridge.par
+// drb MPBridge.run
 /*
  * UniCrypt
  *
@@ -126,7 +126,7 @@ public abstract class AbstractMixer<C extends Set, R extends Set>
 		}
 		final Element[] elementsPrime = new Element[this.getSize()];
 
-		MPBridge.par(() -> {
+		MPBridge.run(() -> {
 			for (int i = 0; i < this.getSize(); i++) {
 				elementsPrime[i] = this.getShuffleFunction().apply(elements.getAt(i), randomizations.getAt(i));
 			}

@@ -148,13 +148,13 @@ public class MPBridge {
     }
 
     /**
-     *  Extracts modpow calls from the given closure.
+     *  Extracts modpows from given closure, executes them via MPService
      *
      *  The closure is first executed in record mode, where modpow requests are saved.
      *  The requests are computed by MPService.
      *  The closure is then executed in replay mode, returning the computed values.
      */
-    public static <T> T par(Supplier<T> f, String v) {
+    public static <T> T run(Supplier<T> f, String v) {
         a();
         startRecord(v);
         long now = System.currentTimeMillis();
@@ -183,8 +183,8 @@ public class MPBridge {
      *
      *  Uses the default dummy value of 2
      */
-    public static <T> T par(Supplier<T> f) {
-        return par(f, "2");
+    public static <T> T run(Supplier<T> f) {
+        return run(f, "2");
     }
 
     /**

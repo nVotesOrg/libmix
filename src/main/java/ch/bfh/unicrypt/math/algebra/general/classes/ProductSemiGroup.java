@@ -1,4 +1,4 @@
-// drb MPBridge.ex
+// drb MPBridge.run
 /*
  * UniCrypt
  *
@@ -257,7 +257,7 @@ public class ProductSemiGroup
 		final Element[] results = new Element[this.getArity()];
 		// this comes from PermutationCommitmentProofSystem:333
 		if(this.getArity() > 2) {
-			MPBridge.par(() -> {
+			MPBridge.run(() -> {
 				for (int i : this.getAllIndices()) {
 					results[i] = tuple.getAt(i).selfApply(amount);
 				}

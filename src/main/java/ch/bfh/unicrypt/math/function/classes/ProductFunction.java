@@ -1,4 +1,4 @@
-// drb MPBridge.ex
+// drb MPBridge.run
 /*
  * UniCrypt
  *
@@ -86,9 +86,8 @@ public final class ProductFunction
 	protected Tuple abstractApply(final Tuple element, final RandomByteSequence randomByteSequence) {
 		final Element[] elements = new Element[this.getArity()];
 
-		// drb
 		if(this.getAt(0) instanceof GeneratorFunction ) {
-			MPBridge.par(() -> {
+			MPBridge.run(() -> {
 				for (int i : this.getAllIndices()) {
 					elements[i] = this.getAt(i).apply(element.getAt(i), randomByteSequence);
 				}

@@ -1,4 +1,4 @@
-// drb MPBridge.par
+// drb MPBridge.run
 /*
  * UniCrypt
  *
@@ -228,7 +228,7 @@ public abstract class AbstractShuffleProofSystem
 		}
 		final Element innerProduct = ((Group) t1.getSet().getAt(0)).getIdentityElement();
 
-		Element ret = MPBridge.par(() -> {
+		Element ret = MPBridge.run(() -> {
 			Element ip = innerProduct;
 			for (int i = 0; i < t1.getArity(); i++) {
 				ip = ip.apply(t1.getAt(i).selfApply(t2.getAt(i)));
