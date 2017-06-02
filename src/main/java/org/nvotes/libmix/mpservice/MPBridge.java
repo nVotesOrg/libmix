@@ -15,187 +15,187 @@ import org.nvotes.libmix.Util;
 /**
  *  Bridges modpow calls into a faster implementation, provided by MPService.
  *
- *	The bridge is implemented with a per-thread record/replay mechanism
+ *  The bridge is implemented with a per-thread record/replay mechanism
  *  that captures modpow calls inside a closure scope. The requests
  *  are then passed to MPService. The results are passed back into
  *  the closure on a second replay run.
  */
 public class MPBridge {
-	private final static Logger logger = LoggerFactory.getLogger(MPBridge.class);
+    private final static Logger logger = LoggerFactory.getLogger(MPBridge.class);
 
-	private static boolean useGmp = Util.getEnvBoolean("libmix.gmp");
-	private static boolean useExtractor = Util.getEnvBoolean("libmix.extractor");
+    private static boolean useGmp = Util.getEnvBoolean("libmix.gmp");
+    private static boolean useExtractor = Util.getEnvBoolean("libmix.extractor");
 
-	private BigInteger dummy = new BigInteger("2");
-	private BigInteger modulus = null;
+    private BigInteger dummy = new BigInteger("2");
+    private BigInteger modulus = null;
 
-	private boolean recording = false;
-	private boolean replaying = false;
+    private boolean recording = false;
+    private boolean replaying = false;
 
-	private LinkedList<ModPow2> requests = new LinkedList<ModPow2>();
-	private List<BigInteger> answers = null;
+    private LinkedList<ModPow2> requests = new LinkedList<ModPow2>();
+    private List<BigInteger> answers = null;
 
-	/**
-	 *	Allows extraction from multithreaded code, creating one
-	 *  MPBridge object per thread.
-	 */
-	private static ThreadLocal<MPBridge> instance = new ThreadLocal<MPBridge>() {
-		@Override protected MPBridge initialValue() {
-			return new MPBridge();
+    /**
+     *  Allows extraction from multithreaded code, creating one
+     *  MPBridge object per thread.
+     */
+    private static ThreadLocal<MPBridge> instance = new ThreadLocal<MPBridge>() {
+        @Override protected MPBridge initialValue() {
+            return new MPBridge();
         }
-	};
+    };
 
-	/**
-	 *	Returns the MPBridge instance associated with the calling thread.
-	 */
-	public static MPBridge i() {
-		return instance.get();
-	}
+    /**
+     *  Returns the MPBridge instance associated with the calling thread.
+     */
+    public static MPBridge i() {
+        return instance.get();
+    }
 
-	/**
-	 *	Starts the recording phase.
-	 *
-	 *  The passed in value will be returned as the dummy result of
-	 *  modpow calls during the record phase.
-	 */
-	public static void startRecord(String value) {
-		i().dummy = new BigInteger(value);
-		if(i().requests.size() != 0)	throw new IllegalStateException();
-		i().recording = useExtractor;
-		i().modulus = null;
-	}
+    /**
+     *  Starts the recording phase.
+     *
+     *  The passed in value will be returned as the dummy result of
+     *  modpow calls during the record phase.
+     */
+    public static void startRecord(String value) {
+        i().dummy = new BigInteger(value);
+        if(i().requests.size() != 0)    throw new IllegalStateException();
+        i().recording = useExtractor;
+        i().modulus = null;
+    }
 
-	/**
-	 *	Starts the recording phase.
-	 *
-	 *  Modpow calls will be returned the default dummy value of 2.
-	 */
-	public static void startRecord() {
-		startRecord("2");
-	}
+    /**
+     *  Starts the recording phase.
+     *
+     *  Modpow calls will be returned the default dummy value of 2.
+     */
+    public static void startRecord() {
+        startRecord("2");
+    }
 
-	/**
-	 *	Stops the recording, returning all collected modpows.
-	 */
-	public static ModPow2[] stopRecord() {
-		i().recording = false;
+    /**
+     *  Stops the recording, returning all collected modpows.
+     */
+    public static ModPow2[] stopRecord() {
+        i().recording = false;
 
-		return i().requests.toArray(new ModPow2[0]);
-	}
+        return i().requests.toArray(new ModPow2[0]);
+    }
 
-	/**
-	 *	Starts the replaying phase.
-	 *
-	 *  Modpow requests will be given results computed
-	 *  by MPService.
-	 */
-	public static void startReplay(BigInteger[] answers_) {
-		if(answers_.length != i().requests.size()) throw new IllegalArgumentException(answers_.length + "!=" + i().requests.size());
-		i().answers = new LinkedList<BigInteger>(Arrays.asList(answers_));
+    /**
+     *  Starts the replaying phase.
+     *
+     *  Modpow requests will be given results computed
+     *  by MPService.
+     */
+    public static void startReplay(BigInteger[] answers_) {
+        if(answers_.length != i().requests.size()) throw new IllegalArgumentException(answers_.length + "!=" + i().requests.size());
+        i().answers = new LinkedList<BigInteger>(Arrays.asList(answers_));
 
-		i().replaying = true;
-	}
+        i().replaying = true;
+    }
 
-	/**
-	 *	Stops the replaying phase.
-	 */
-	public static void stopReplay() {
-		if(i().answers.size() != 0) throw new IllegalStateException();
+    /**
+     *  Stops the replaying phase.
+     */
+    public static void stopReplay() {
+        if(i().answers.size() != 0) throw new IllegalStateException();
 
-		i().replaying = false;
-	}
+        i().replaying = false;
+    }
 
-	/**
-	 *	Resets this MPBridge instance.
-	 */
-	public static void reset() {
-		i().requests.clear();
-	}
+    /**
+     *  Resets this MPBridge instance.
+     */
+    public static void reset() {
+        i().requests.clear();
+    }
 
-	/**
-	 *	Adds a modpow request to the list to be computed by MPService.
-	 */
-	public static void addModPow(BigInteger base, BigInteger pow, BigInteger mod) {
-		MPBridge i = i();
-		if(!i.recording) throw new IllegalStateException();
-		if(i.modulus == null) {
-			i.modulus = mod;
-		}
-		// sanity check
-		else if(!i.modulus.equals(mod)) {
-			throw new RuntimeException(i.modulus + "!=" + mod);
-		}
+    /**
+     *  Adds a modpow request to the list to be computed by MPService.
+     */
+    public static void addModPow(BigInteger base, BigInteger pow, BigInteger mod) {
+        MPBridge i = i();
+        if(!i.recording) throw new IllegalStateException();
+        if(i.modulus == null) {
+            i.modulus = mod;
+        }
+        // sanity check
+        else if(!i.modulus.equals(mod)) {
+            throw new RuntimeException(i.modulus + "!=" + mod);
+        }
 
-		i.requests.add(new ModPow2(base, pow));
-	}
+        i.requests.add(new ModPow2(base, pow));
+    }
 
-	/**
-	 *	Returns the recorded requests.
-	 */
-	public static LinkedList<ModPow2> getRequests() {
-		if(i().recording) throw new IllegalStateException();
+    /**
+     *  Returns the recorded requests.
+     */
+    public static LinkedList<ModPow2> getRequests() {
+        if(i().recording) throw new IllegalStateException();
 
-		return i().requests;
-	}
+        return i().requests;
+    }
 
-	/**
-	 *	Returns a result, as calculated by MPService.
-	 */
-	public static BigInteger getModPow() {
-		if(i().recording) throw new IllegalStateException();
+    /**
+     *  Returns a result, as calculated by MPService.
+     */
+    public static BigInteger getModPow() {
+        if(i().recording) throw new IllegalStateException();
 
-		return i().answers.remove(0);
-	}
+        return i().answers.remove(0);
+    }
 
-	/**
-	 *	Extracts modpow calls from the given closure.
-	 *
-	 *  The closure is first executed in record mode, where modpow requests are saved.
-	 *  The requests are computed by MPService.
-	 *  The closure is then executed in replay mode, returning the computed values.
-	 */
-	public static <T> T par(Supplier<T> f, String v) {
-		a();
-	 	startRecord(v);
-	 	long now = System.currentTimeMillis();
-	 	T ret = f.get();
-	 	long r = System.currentTimeMillis() - now;
-	 	logger.trace("Record: [" + r + " ms]");
-	 	ModPow2[] reqs = stopRecord();
-		b(3);
-		if(reqs.length > 0) {
-			long now2 = System.currentTimeMillis();
-			BigInteger[] answers = MPService.compute(reqs, i().modulus);
-			long c = System.currentTimeMillis() - now2;
-			startReplay(answers);
-			ret = f.get();
-			long t = System.currentTimeMillis() - now;
-			logger.trace("Compute: [" + c + " ms] R+C: [" + (r+c) + " ms] Total: [" + t + " ms]");
-			stopReplay();
-		}
-		reset();
+    /**
+     *  Extracts modpow calls from the given closure.
+     *
+     *  The closure is first executed in record mode, where modpow requests are saved.
+     *  The requests are computed by MPService.
+     *  The closure is then executed in replay mode, returning the computed values.
+     */
+    public static <T> T par(Supplier<T> f, String v) {
+        a();
+        startRecord(v);
+        long now = System.currentTimeMillis();
+        T ret = f.get();
+        long r = System.currentTimeMillis() - now;
+        logger.trace("Record: [" + r + " ms]");
+        ModPow2[] reqs = stopRecord();
+        b(3);
+        if(reqs.length > 0) {
+            long now2 = System.currentTimeMillis();
+            BigInteger[] answers = MPService.compute(reqs, i().modulus);
+            long c = System.currentTimeMillis() - now2;
+            startReplay(answers);
+            ret = f.get();
+            long t = System.currentTimeMillis() - now;
+            logger.trace("Compute: [" + c + " ms] R+C: [" + (r+c) + " ms] Total: [" + t + " ms]");
+            stopReplay();
+        }
+        reset();
 
-		return ret;
-	}
+        return ret;
+    }
 
-	/**
-	 *	Extracts modpow calls from the given closure.
-	 *
-	 *  Uses the default dummy value of 2
-	 */
-	public static <T> T par(Supplier<T> f) {
-		return par(f, "2");
-	}
+    /**
+     *  Extracts modpow calls from the given closure.
+     *
+     *  Uses the default dummy value of 2
+     */
+    public static <T> T par(Supplier<T> f) {
+        return par(f, "2");
+    }
 
-	/**
-	 *	Method to intercept modpow calls.
-	 *
-	 *  For extraction to work, the target code must call this version
-	 *  of modpow. If recording is activated, adds the request and returns
-	 *  the dummy value. If replaying, returns the result computed by
-	 *  MPService.
-	 */
-	public static BigInteger modPow(BigInteger base, BigInteger pow, BigInteger mod) {
+    /**
+     *  Method to intercept modpow calls.
+     *
+     *  For extraction to work, the target code must call this version
+     *  of modpow. If recording is activated, adds the request and returns
+     *  the dummy value. If replaying, returns the result computed by
+     *  MPService.
+     */
+    public static BigInteger modPow(BigInteger base, BigInteger pow, BigInteger mod) {
         MPBridge i = i();
         if(i.recording) {
             total++;
@@ -224,82 +224,82 @@ public class MPBridge {
     }
 
     /**
-     *	Returns the modulus common to all modpow requests.
+     *  Returns the modulus common to all modpow requests.
      *
      */
     public static BigInteger getModulus() {
-    	return i().modulus;
+        return i().modulus;
     }
 
-	/****************************** DEBUG STUFF ****************************/
+    /****************************** DEBUG STUFF ****************************/
 
-	private boolean replayingDebug = false;
-	private List<ModPowResult> answersDebug = null;
+    private boolean replayingDebug = false;
+    private List<ModPowResult> answersDebug = null;
 
-	// tracing vars
-	public long before = 0;
-	public static long total = 0;
-	private long beforeTime = 0;
+    // tracing vars
+    public long before = 0;
+    public static long total = 0;
+    private long beforeTime = 0;
 
-	public static void startReplayDebug(ModPowResult[] answers_) {
-		if(answers_.length != i().requests.size()) throw new IllegalArgumentException(answers_.length + "!=" + i().requests.size());
-		i().answersDebug = new LinkedList<ModPowResult>(Arrays.asList(answers_));
+    public static void startReplayDebug(ModPowResult[] answers_) {
+        if(answers_.length != i().requests.size()) throw new IllegalArgumentException(answers_.length + "!=" + i().requests.size());
+        i().answersDebug = new LinkedList<ModPowResult>(Arrays.asList(answers_));
 
-		i().replayingDebug = true;
-	}
+        i().replayingDebug = true;
+    }
 
-	public static void stopReplayDebug() {
-		if(i().answersDebug.size() != 0) throw new IllegalStateException();
+    public static void stopReplayDebug() {
+        if(i().answersDebug.size() != 0) throw new IllegalStateException();
 
-		i().replayingDebug = false;
-	}
+        i().replayingDebug = false;
+    }
 
-	public static ModPowResult getModPowDebug() {
-		if(i().recording) throw new IllegalStateException();
+    public static ModPowResult getModPowDebug() {
+        if(i().recording) throw new IllegalStateException();
 
-		return i().answersDebug.remove(0);
-	}
+        return i().answersDebug.remove(0);
+    }
 
-	public static <T> T parDebug(Supplier<T> f, String v) {
-		a();
-	 	startRecord(v);
-	 	long now = System.currentTimeMillis();
-	 	T ret = f.get();
-	 	long r = System.currentTimeMillis() - now;
-	 	logger.trace("R: [" + r + " ms]");
-	 	ModPow2[] reqs = stopRecord();
-		b(3);
-		if(reqs.length > 0) {
-			long now2 = System.currentTimeMillis();
+    public static <T> T parDebug(Supplier<T> f, String v) {
+        a();
+        startRecord(v);
+        long now = System.currentTimeMillis();
+        T ret = f.get();
+        long r = System.currentTimeMillis() - now;
+        logger.trace("R: [" + r + " ms]");
+        ModPow2[] reqs = stopRecord();
+        b(3);
+        if(reqs.length > 0) {
+            long now2 = System.currentTimeMillis();
 
-			ModPowResult[] answers = MPService.computeDebug(reqs, i().modulus);
-			long c = System.currentTimeMillis() - now2;
+            ModPowResult[] answers = MPService.computeDebug(reqs, i().modulus);
+            long c = System.currentTimeMillis() - now2;
 
-			startReplayDebug(answers);
-			ret = f.get();
-			long t = System.currentTimeMillis() - now;
-			logger.trace("\nC: [" + c + " ms] T: [" + t + " ms] R+C: [" + (r+c) + " ms]");
+            startReplayDebug(answers);
+            ret = f.get();
+            long t = System.currentTimeMillis() - now;
+            logger.trace("\nC: [" + c + " ms] T: [" + t + " ms] R+C: [" + (r+c) + " ms]");
 
-			stopReplayDebug();
-		}
-		reset();
+            stopReplayDebug();
+        }
+        reset();
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static <T> T parDebug(Supplier<T> f) {
-		return parDebug(f, "2");
-	}
+    public static <T> T parDebug(Supplier<T> f) {
+        return parDebug(f, "2");
+    }
 
-	public static void a() {
-		i().beforeTime = System.currentTimeMillis();
-	}
+    public static void a() {
+        i().beforeTime = System.currentTimeMillis();
+    }
 
-	public static void b(int trace) {
-		MPBridge i = i();
-		StackTraceElement[] traces = Thread.currentThread().getStackTrace();
-		StackTraceElement caller = traces[trace];
-		long diffTime = System.currentTimeMillis() - i.beforeTime;
-		logger.trace(">>> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diffTime + " ms]" + " (" + total + ")");
-	}
+    public static void b(int trace) {
+        MPBridge i = i();
+        StackTraceElement[] traces = Thread.currentThread().getStackTrace();
+        StackTraceElement caller = traces[trace];
+        long diffTime = System.currentTimeMillis() - i.beforeTime;
+        logger.trace(">>> " + caller.getFileName() + ":" + caller.getLineNumber() + " [" + diffTime + " ms]" + " (" + total + ")");
+    }
 }
