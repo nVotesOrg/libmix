@@ -1,6 +1,6 @@
 # libmix
 
-A mixnet library built on top of [unicrypt](https://github.com/bfh-evg/univote2) and the [univote](https://github.com/bfh-evg/univote2) design. Provides
+A mixnet library built on top of [unicrypt](https://github.com/bfh-evg/unicrypt) and the [univote](https://github.com/bfh-evg/univote2) design. Provides
 
 * A Scala interface to mixnet-based voting system building blocks
 * An automatic parallelization mechanism for modPow operations
