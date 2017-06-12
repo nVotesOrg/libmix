@@ -37,4 +37,4 @@ envVars in run := Map(
 scalacOptions ++= Seq("-feature", "-language:existentials", "-deprecation")
 javacOptions ++= Seq("-deprecation")
 scalacOptions += "-opt:l:classpath"
-// javacOptions += "-Xlint:unchecked"
+javacOptions += "-Xlint:unchecked"

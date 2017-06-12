@@ -129,7 +129,7 @@ object MPBridgeScala {
 
   val logger = LoggerFactory.getLogger(MPBridgeScala.getClass)
 
-  /** Extract modpows from the given function
+  /** Extract modpows from the given function, executes them via MPService
    *
    *  Uses MPBridge record/replay mechanism.
    */

@@ -2,13 +2,14 @@ package org.nvotes.libmix
 
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Element
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModElement
 import ch.bfh.unicrypt.math.algebra.general.classes.PermutationElement
 import ch.bfh.unicrypt.math.algebra.general.classes.Tuple
 
 /**
  * The group and generator for an election
  */
-case class CryptoSettings(group: GStarModSafePrime, generator: Element[_])
+case class CryptoSettings(group: GStarModSafePrime, generator: GStarModElement)
 
 /**
  *  Private permutation data
