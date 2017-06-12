@@ -98,32 +98,41 @@ class CryptoSpec extends FlatSpec {
     val message = f.getMessageSpace().getElementFrom(5);
 
     // Compute shares
-    val sharesAndCommitments = f.share(message);
-    val shares = sharesAndCommitments.shares;
+    val sharesAndCommitments = f.share(message)
+    val shareXs = sharesAndCommitments.xs
+    val shareYs = sharesAndCommitments.ys
 
     // Select subset of shares
-    val someShares = shares.removeAt(1).removeAt(3);
+    val someSharesX = shareXs.drop(2)
+    val someSharesY = shareYs.drop(2)
 
     // Recover message
-    val recoveredMessage1 = f.recover(someShares);
+    val recoveredMessage1 = f.recover(someSharesX, someSharesY)
 
     // Recover message differently
-    val recoveredMessage2 = f.recover(shares.getAt(1), shares.getAt(2), shares.getAt(3));
+    val recoveredMessage2 = f.recover(shareXs, shareYs)
 
     assert(recoveredMessage1 == message)
     assert(recoveredMessage2 == message)
+
+    val notEnoughX = shareXs.drop(3)
+    val notEnoughY = shareYs.drop(3)
+
+    assertThrows[IllegalArgumentException]{
+      f.recover(notEnoughY, notEnoughY)
+    }
   }
 
-  "pedersen vss" should "encrypt and decrypt" in {
+  "pedersen vss" should "encrypt and decrypt ok" in {
     val group = GStarModSafePrime.getFirstInstance(10)
     val generator = group.getDefaultGenerator()
     val trustees = 5
     val threshold = 3
 
     // Create ElGamal encryption scheme
-    val elGamal = ElGamalEncryptionScheme.getInstance(generator);
+    val elGamal = ElGamalEncryptionScheme.getInstance(generator)
 
-    val f = FeldmanSecretSharingScheme.getInstance(group, generator, trustees, threshold);
+    val f = FeldmanSecretSharingScheme.getInstance(group, generator, trustees, threshold)
 
     // the private share
     // val message = f.getMessageSpace().getRandomElement();
@@ -145,9 +154,8 @@ class CryptoSpec extends FlatSpec {
     val s = subset.map{ t =>
       // the trustee secrets are the sum of all shares received from other trustees
       val points = allShares.filter(_ != t).map{ sc =>
-        val pair = sc.shares.getAt(t).asInstanceOf[Pair]
-        val x = pair.getFirst().asInstanceOf[ZModElement]
-        val y = pair.getSecond().asInstanceOf[ZModElement]
+        val x = sc.xs(t)
+        val y = sc.ys(t)
         (x,y)
       }
       // the trustee secrets are the sum of all shares received from other trustees
@@ -163,7 +171,7 @@ class CryptoSpec extends FlatSpec {
     val partials = secrets.map(encryption.getFirst().selfApply(_))
 
     // calculate lagrange coefficients
-    val lagrange = f.lg(xs.toArray)
+    val lagrange = f.lagrangeCoefficients(xs.toArray)
 
     val zipped = partials zip lagrange
 

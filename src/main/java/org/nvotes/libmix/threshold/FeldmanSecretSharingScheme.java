@@ -71,36 +71,38 @@ public class FeldmanSecretSharingScheme {
 		return this.size;
 	}
 
-	public final SharesAndCommitments share(Element message) {
+	public final SharesAndCommitments share(ZModElement message) {
 		return this.share(message, HybridRandomByteSequence.getInstance());
 	}
 
-	public final SharesAndCommitments share(Element message, RandomByteSequence randomByteSequence) {
+	public final SharesAndCommitments share(ZModElement message, RandomByteSequence randomByteSequence) {
 		if (message == null || !this.getMessageSpace().contains(message) || randomByteSequence == null) {
 			throw new IllegalArgumentException();
 		}
 		return this.abstractShare(message, randomByteSequence);
 	}
 
-	public final ZModElement recover(Element... shares) {
-		return this.recover(Tuple.getInstance(shares));
-	}
+	public final ZModElement recover(ZModElement[] xs, ZModElement[] ys) {
+		if (xs == null || ys == null || xs.length < this.getThreshold() ||
+			xs.length > this.getSize() || xs.length != ys.length) {
 
-	public final ZModElement recover(Tuple shares) {
-		if (shares == null || shares.getArity() < this.getThreshold() || shares.getArity() > this.getSize()
-			   || !ProductSet.getInstance(this.getShareSpace(), shares.getArity()).contains(shares)) {
 			throw new IllegalArgumentException();
 		}
-		return abstractRecover(shares);
+		for(int i = 0; i < xs.length; i++) {
+			if(!zModPrime.contains(xs[i]) || !zModPrime.contains(ys[i]) ) {
+				throw new IllegalArgumentException();
+			}
+		}
+
+		return abstractRecover(xs, ys);
 	}
 
-
-	public SharesAndCommitments abstractShare(Element message, RandomByteSequence randomByteSequence) {
+	public SharesAndCommitments abstractShare(ZModElement message, RandomByteSequence randomByteSequence) {
 		// create an array of coefficients with size threshold
 		// the coefficient of degree 0 is fixed (message)
 		// all other coefficients are random
-		DualisticElement[] coefficients = new DualisticElement[getThreshold()];
-		coefficients[0] = (DualisticElement) message;
+		ZModElement[] coefficients = new ZModElement[getThreshold()];
+		coefficients[0] = message;
 		for (int i = 1; i < getThreshold(); i++) {
 			coefficients[i] = this.zModPrime.getRandomElement(randomByteSequence);
 		}
@@ -109,13 +111,14 @@ public class FeldmanSecretSharingScheme {
 		final PolynomialElement polynomial = this.polynomialRing.getElement(coefficients);
 
 		// create a tuple which stores the shares
-		Pair[] shares = new Pair[this.getSize()];
-		DualisticElement xVal;
+		ZModElement[] xs = new ZModElement[this.getSize()];
+		ZModElement[] ys = new ZModElement[this.getSize()];
+		ZModElement xVal;
 
 		// populate the tuple array with tuples of x and y values
 		for (int i = 0; i < this.getSize(); i++) {
-			xVal = this.zModPrime.getElement(BigInteger.valueOf(i + 1));
-			shares[i] = polynomial.getPoint(xVal);
+			xs[i] = this.zModPrime.getElement(BigInteger.valueOf(i + 1));
+			ys[i] = (ZModElement) polynomial.getPoint(xs[i]).getSecond();
 		}
 
 		// commitments
@@ -126,7 +129,7 @@ public class FeldmanSecretSharingScheme {
 
 		// verify shares
 		for (int i = 0; i < this.getSize(); i++) {
-			GStarModElement lhs = generator.selfApply(shares[i].getSecond());
+			GStarModElement lhs = generator.selfApply(ys[i]);
 
 			GStarModElement rhs = null;
 			for (int j = 0; j < getThreshold(); j++) {
@@ -143,11 +146,11 @@ public class FeldmanSecretSharingScheme {
 			assert(lhs == rhs);
 		}
 
-		return new SharesAndCommitments(Tuple.getInstance(shares), commitments);
+		return new SharesAndCommitments(xs, ys, commitments);
 	}
 
 
-	public ZModElement[] lg(ZModElement[] in) {
+	public ZModElement[] lagrangeCoefficients(ZModElement[] in) {
 		int length = in.length;
 		// Calculating the lagrange coefficients for each point we got
 		ZModElement product;
@@ -172,31 +175,14 @@ public class FeldmanSecretSharingScheme {
 	}
 
 
-	public ZModElement abstractRecover(Tuple shares) {
-		int length = shares.getArity();
-		// Calculating the lagrange coefficients for each point we got
-		DualisticElement product;
-		DualisticElement[] lagrangeCoefficients = new DualisticElement[length];
-		for (int j = 0; j < length; j++) {
-			product = null;
-			DualisticElement elementJ = (DualisticElement) shares.getAt(j, 0);
-			for (int l = 0; l < length; l++) {
-				DualisticElement elementL = (DualisticElement) shares.getAt(l, 0);
-				if (!elementJ.equals(elementL)) {
-					if (product == null) {
-						product = elementL.divide(elementL.subtract(elementJ));
-					} else {
-						product = product.multiply(elementL.divide(elementL.subtract(elementJ)));
-					}
-				}
-			}
-			lagrangeCoefficients[j] = product;
-		}
+	public ZModElement abstractRecover(ZModElement[] xs, ZModElement[] ys) {
+		int length = xs.length;
+		ZModElement[] lagrangeCoefficients = lagrangeCoefficients(xs);
+
 		// multiply the y-value of the point with the lagrange coefficient and sum everything up
 		ZModElement result = this.zModPrime.getIdentityElement();
 		for (int j = 0; j < length; j++) {
-			DualisticElement value = (DualisticElement) shares.getAt(j, 1);
-			result = result.add(value.multiply(lagrangeCoefficients[j]));
+			result = result.add(ys[j].multiply(lagrangeCoefficients[j]));
 		}
 		return result;
 	}

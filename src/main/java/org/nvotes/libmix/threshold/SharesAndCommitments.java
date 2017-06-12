@@ -5,11 +5,13 @@ import ch.bfh.unicrypt.math.algebra.dualistic.classes.ZModElement;
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModElement;
 
 public class SharesAndCommitments {
-	public Tuple shares;
+	public ZModElement[] xs;
+	public ZModElement[] ys;
 	public GStarModElement[] commitments;
 
-	public SharesAndCommitments(Tuple shares, GStarModElement[] commitments) {
-		this.shares = shares;
+	public SharesAndCommitments(ZModElement[] xs, ZModElement[] ys, GStarModElement[] commitments) {
+		this.xs = xs;
+		this.ys = ys;
 		this.commitments = commitments;
 	}
 }
