@@ -48,38 +48,38 @@ public class FeldmanSecretSharingScheme {
 	}
 
 	public ZModPrime getZModPrime() {
-		return this.zModPrime;
+		return zModPrime;
 	}
 
 	public PolynomialRing getPolynomialRing() {
-		return this.polynomialRing;
+		return polynomialRing;
 	}
 
 	public final ZModPrime getMessageSpace() {
-		return this.zModPrime;
+		return zModPrime;
 	}
 
 	public final ProductGroup getShareSpace() {
-		return this.shareSpace;
+		return shareSpace;
 	}
 
 	public int getThreshold() {
-		return this.threshold;
+		return threshold;
 	}
 
 	public final int getSize() {
-		return this.size;
+		return size;
 	}
 
 	public final SharesAndCommitments share(ZModElement message) {
-		return this.share(message, HybridRandomByteSequence.getInstance());
+		return share(message, HybridRandomByteSequence.getInstance());
 	}
 
 	public final SharesAndCommitments share(ZModElement message, RandomByteSequence randomByteSequence) {
 		if (message == null || !this.getMessageSpace().contains(message) || randomByteSequence == null) {
 			throw new IllegalArgumentException();
 		}
-		return this.abstractShare(message, randomByteSequence);
+		return share_(message, randomByteSequence);
 	}
 
 	public final ZModElement recover(ZModElement[] xs, ZModElement[] ys) {
@@ -94,10 +94,10 @@ public class FeldmanSecretSharingScheme {
 			}
 		}
 
-		return abstractRecover(xs, ys);
+		return recover_(xs, ys);
 	}
 
-	public SharesAndCommitments abstractShare(ZModElement message, RandomByteSequence randomByteSequence) {
+	private SharesAndCommitments share_(ZModElement message, RandomByteSequence randomByteSequence) {
 		// create an array of coefficients with size threshold
 		// the coefficient of degree 0 is fixed (message)
 		// all other coefficients are random
@@ -175,7 +175,7 @@ public class FeldmanSecretSharingScheme {
 	}
 
 
-	public ZModElement abstractRecover(ZModElement[] xs, ZModElement[] ys) {
+	private ZModElement recover_(ZModElement[] xs, ZModElement[] ys) {
 		int length = xs.length;
 		ZModElement[] lagrangeCoefficients = lagrangeCoefficients(xs);
 
