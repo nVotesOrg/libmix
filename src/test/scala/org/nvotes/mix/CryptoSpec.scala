@@ -24,8 +24,8 @@ class CryptoSpec extends FlatSpec {
   val gen = grp.getDefaultGenerator()
   val Csettings = CryptoSettings(grp, gen)
 
-  val shares = scala.collection.mutable.ArrayBuffer.empty[Element[_]]
-  val privates = scala.collection.mutable.ArrayBuffer.empty[Element[_]]
+  val shares = scala.collection.mutable.ArrayBuffer.empty[GStarModElement]
+  val privates = scala.collection.mutable.ArrayBuffer.empty[ZModElement]
 
   object KM extends KeyMaker
   object MX extends Mixer
@@ -34,7 +34,7 @@ class CryptoSpec extends FlatSpec {
     val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
     val keyPair = elGamal.getKeyPairGenerator().generateKeyPair()
     val privateKey = keyPair.getFirst()
-    val publicKey = keyPair.getSecond()
+    val publicKey = keyPair.getSecond().asInstanceOf[GStarModElement]
 
     val plaintexts = Seq.fill(10)(scala.util.Random.nextInt(10))
     val votes = Util.encryptVotes(plaintexts, Csettings, publicKey)
@@ -124,6 +124,9 @@ class CryptoSpec extends FlatSpec {
   }
 
   "pedersen vss" should "encrypt and decrypt ok" in {
+
+    // see section 6.8 threshold elgamal in user anonymization pdf
+
     val group = GStarModSafePrime.getFirstInstance(10)
     val generator = group.getDefaultGenerator()
     val trustees = 5
@@ -133,9 +136,6 @@ class CryptoSpec extends FlatSpec {
     val elGamal = ElGamalEncryptionScheme.getInstance(generator)
 
     val f = FeldmanSecretSharingScheme.getInstance(group, generator, trustees, threshold)
-
-    // the private share
-    // val message = f.getMessageSpace().getRandomElement();
 
     // Compute shares
     val allShares = Array.fill(trustees)(f.share(f.getMessageSpace().getRandomElement()))
@@ -188,7 +188,7 @@ class CryptoSpec extends FlatSpec {
     assert(message == plaintext)
   }
 
-  def combineShares(shares: Seq[Element[_]], Csettings: CryptoSettings) = {
+  def combineShares(shares: Seq[GStarModElement], Csettings: CryptoSettings) = {
     var encKey = Csettings.group.getIdentityElement()
 
     // y = y1 * y2 * y3....
@@ -199,14 +199,14 @@ class CryptoSpec extends FlatSpec {
     encKey
   }
 
-  def addShare(encryptionKeyShare: EncryptionKeyShareDTO, proverId: String, CSettings: CryptoSettings, privateK: String) = {
-    val result = Verifier.verifyKeyShare(encryptionKeyShare, Csettings, proverId: String)
+  def addShare(encryptionKeyShare: EncryptionKeyShareDTO, proverId: String, cSettings: CryptoSettings, privateK: String) = {
+    val result = Verifier.verifyKeyShare(encryptionKeyShare, cSettings, proverId: String)
     if(result) {
-      val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
+      val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
       val keyPairGen: KeyPairGenerator = elGamal.getKeyPairGenerator()
-      val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(encryptionKeyShare.keyShare)
+      val publicKey = cSettings.group.getElementFrom(encryptionKeyShare.keyShare)
       shares += publicKey
-      val privateKey = keyPairGen.getPrivateKeySpace().getElementFrom(privateK)
+      val privateKey = keyPairGen.getPrivateKeySpace().getElementFrom(privateK).asInstanceOf[ZModElement]
 
       privates += privateKey
     }

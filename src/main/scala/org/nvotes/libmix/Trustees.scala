@@ -25,6 +25,7 @@ import ch.bfh.unicrypt.math.algebra.general.classes.Triple
 import ch.bfh.unicrypt.math.algebra.general.classes.Tuple
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Element
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModElement
+import ch.bfh.unicrypt.math.algebra.dualistic.classes.ZModElement
 import ch.bfh.unicrypt.math.function.classes.CompositeFunction
 import ch.bfh.unicrypt.math.function.classes.GeneratorFunction
 import ch.bfh.unicrypt.math.function.classes.InvertFunction
@@ -51,13 +52,13 @@ trait KeyMaker extends ProofSettings {
    * The public encryption data is serialized, returning an (EncryptionKeyShareDTO, Element) tuple.
    * The second element of the tuple is the private share, a unicrypt Element.
    */
-  def createShare(proverId: String, cSettings: CryptoSettings): (EncryptionKeyShareDTO, Element[_]) = {
+  def createShare(proverId: String, cSettings: CryptoSettings): (EncryptionKeyShareDTO, ZModElement) = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
 
     val kpg = elGamal.getKeyPairGenerator()
     val keyPair = kpg.generateKeyPair()
-    val privateKey = keyPair.getFirst()
+    val privateKey: ZModElement = keyPair.getFirst().asInstanceOf[ZModElement]
     val publicKey = keyPair.getSecond()
 
     val function = kpg.getPublicKeyGenerationFunction()
@@ -80,12 +81,13 @@ trait KeyMaker extends ProofSettings {
    *
    * The data is serialized and returned as a PartialDecryptionDTO
    */
-  def partialDecrypt(votes: Seq[Tuple], privateKey: Element[_], proverId: String,
+  def partialDecrypt(votes: Seq[Tuple], privateKey: ZModElement, proverId: String,
     cSettings: CryptoSettings): PartialDecryptionDTO = {
 
     val encryptionGenerator = cSettings.generator
 
-    val secretKey = cSettings.group.getZModOrder().getElementFrom(privateKey.convertToBigInteger)
+    // val secretKey = cSettings.group.getZModOrder().getElementFrom(privateKey.convertToBigInteger)
+    val secretKey = privateKey
 
     val decryptionKey = secretKey.invert()
     val publicKey = encryptionGenerator.selfApply(secretKey)
@@ -114,8 +116,8 @@ trait KeyMaker extends ProofSettings {
    *
    * The data is serialized and returned as a SigmaProofDTO
    */
-  private def createProof(proverId: String, secretKey: Element[_], publicKey: Element[_],
-    partialDecryptions: Seq[Element[_]], generatorFunctions: Seq[Function], cSettings: CryptoSettings)
+  private def createProof(proverId: String, secretKey: ZModElement, publicKey: GStarModElement,
+    partialDecryptions: Seq[GStarModElement], generatorFunctions: Seq[Function], cSettings: CryptoSettings)
     : SigmaProofDTO = {
 
     val encryptionGenerator = cSettings.generator
@@ -162,7 +164,7 @@ trait Mixer extends ProofSettings {
    * The public permutation data is serialized, returning as a (PermutationProofDTO, PermutationData) tuple.
    * The second element of the tuple is the private permutation data, which is not serialized.
    */
-  def preShuffle(voteCount: Int, publicKey: Element[_], cSettings: CryptoSettings, proverId: String)
+  def preShuffle(voteCount: Int, publicKey: GStarModElement, cSettings: CryptoSettings, proverId: String)
     : (PermutationProofDTO, PermutationData) = {
 
     logger.debug("Mixer: shuffle (offline)..")
@@ -216,7 +218,7 @@ trait Mixer extends ProofSettings {
    *
    * Unlike the core method above, this method returns all data serialized
    */
-  def preShuffleAlt(voteCount: Int, publicKey: Element[_], cSettings: CryptoSettings, proverId: String)
+  def preShuffleAlt(voteCount: Int, publicKey: GStarModElement, cSettings: CryptoSettings, proverId: String)
     : PermutationDTO = {
 
     val (permutationProofDTO, pData) = preShuffle(voteCount, publicKey, cSettings, proverId)
@@ -230,7 +232,7 @@ trait Mixer extends ProofSettings {
    * The data is serialized and returned as a ShuffleResultDTO
    */
   def shuffle(ciphertexts: Tuple, pData: PermutationData, pdto: PermutationProofDTO,
-    publicKey: Element[_], cSettings: CryptoSettings, proverId: String): ShuffleResultDTO = {
+    publicKey: GStarModElement, cSettings: CryptoSettings, proverId: String): ShuffleResultDTO = {
 
     logger.debug("Mixer: shuffle (online)..")
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
@@ -294,7 +296,7 @@ trait Mixer extends ProofSettings {
    * The data is serialized and returned as a ShuffleResultDTO
    */
   def shuffle(ciphertexts: Tuple, pdto: PermutationDTO,
-    publicKey: Element[_], cSettings: CryptoSettings, proverId: String): ShuffleResultDTO = {
+    publicKey: GStarModElement, cSettings: CryptoSettings, proverId: String): ShuffleResultDTO = {
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val mixer: ReEncryptionMixer = ReEncryptionMixer.getInstance(elGamal, publicKey, ciphertexts.getArity)
     val psi: PermutationElement = mixer.getPermutationGroup().getElementFrom(pdto.permutation)
@@ -312,7 +314,7 @@ trait Mixer extends ProofSettings {
    *
    * The data is serialized and returned as a ShuffleResultDTO
    */
-  def shuffle(ciphertexts: Tuple, publicKey: Element[_], Csettings: CryptoSettings, proverId: String)
+  def shuffle(ciphertexts: Tuple, publicKey: GStarModElement, Csettings: CryptoSettings, proverId: String)
     : ShuffleResultDTO  = {
 
     logger.debug("Mixer: shuffle (offline + online)..")

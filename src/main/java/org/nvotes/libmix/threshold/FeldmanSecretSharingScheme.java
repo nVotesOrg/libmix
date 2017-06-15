@@ -3,7 +3,6 @@ package org.nvotes.libmix.threshold;
 import ch.bfh.unicrypt.crypto.schemes.sharing.classes.*;
 import ch.bfh.unicrypt.helper.random.hybrid.HybridRandomByteSequence;
 import ch.bfh.unicrypt.math.algebra.general.classes.ProductSet;
-
 import ch.bfh.unicrypt.crypto.schemes.sharing.abstracts.AbstractThresholdSecretSharingScheme;
 import ch.bfh.unicrypt.helper.random.RandomByteSequence;
 import ch.bfh.unicrypt.math.algebra.dualistic.classes.PolynomialElement;
@@ -17,6 +16,7 @@ import ch.bfh.unicrypt.math.algebra.general.classes.Tuple;
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Element;
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime;
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModElement;
+
 import java.math.BigInteger;
 
 /**
@@ -33,11 +33,10 @@ public class FeldmanSecretSharingScheme {
 
     private final ZModPrime zModPrime;
     private final PolynomialRing polynomialRing;
-    private ZModPrime messageSpace;
-    protected final int size;
+    private final int size;
     private final int threshold;
-    private final ProductGroup shareSpace;
     private GStarModElement generator;
+    private final ProductGroup shareSpace;
 
     /**
      *  Constructor takes the ElGamal group and generator, plus sharing parameters.

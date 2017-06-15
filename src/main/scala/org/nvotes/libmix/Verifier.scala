@@ -33,6 +33,7 @@ import ch.bfh.unicrypt.math.function.classes.MultiIdentityFunction
 import ch.bfh.unicrypt.math.function.classes.ProductFunction
 import ch.bfh.unicrypt.math.function.interfaces.Function
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractSet
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModElement
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -98,7 +99,7 @@ object Verifier extends ProofSettings {
    * Returns true if the proof is correct, false otherwise.
    */
   def verifyPartialDecryption(pd: PartialDecryptionDTO, votes: Seq[Tuple], cSettings: CryptoSettings,
-    proverId: String, publicShare: Element[_]): Boolean = {
+    proverId: String, publicShare: GStarModElement): Boolean = {
 
     val encryptionGenerator = cSettings.generator
     val generatorFunctions = votes.par.map { x: Tuple =>
@@ -112,7 +113,7 @@ object Verifier extends ProofSettings {
         MultiIdentityFunction.getInstance(cSettings.group.getZModOrder(), generatorFunctions.length),
         ProductFunction.getInstance(generatorFunctions :_*))
 
-    val pdElements = pd.partialDecryptions.par.map(cSettings.group.asInstanceOf[AbstractSet[_,_]].getElementFrom(_)).seq
+    val pdElements = pd.partialDecryptions.par.map(cSettings.group.getElementFrom(_)).seq
 
     val publicInput: Pair = Pair.getInstance(publicShare, Tuple.getInstance(pdElements:_*))
     val otherInput = StringMonoid.getInstance(Alphabet.UNICODE_BMP).getElement(proverId)
@@ -138,7 +139,7 @@ object Verifier extends ProofSettings {
    * Returns true if the proof is correct, false otherwise.
    */
   def verifyShuffle(votes: Tuple, shuffledVotes: Tuple, shuffleProof: ShuffleProofDTO,
-    proverId: String, publicKey: Element[_], cSettings: CryptoSettings): Boolean = {
+    proverId: String, publicKey: GStarModElement, cSettings: CryptoSettings): Boolean = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
 

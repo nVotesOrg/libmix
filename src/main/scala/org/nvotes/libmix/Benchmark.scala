@@ -3,6 +3,7 @@ package org.nvotes.libmix.benchmark
 import ch.bfh.unicrypt.crypto.schemes.encryption.classes.ElGamalEncryptionScheme
 import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModElement
 import ch.bfh.unicrypt.math.algebra.general.classes.Pair
 import ch.bfh.unicrypt.math.algebra.general.classes.Tuple
 import org.nvotes.libmix._
@@ -45,10 +46,10 @@ object Benchmark extends App {
 
   // create public key
   val shares = allShares.map { share =>
-    Util.getPublicKeyFromString(share.keyShare, cSettings.generator)
+    Util.getPublicKeyFromString(share.keyShare, cSettings.generator).asInstanceOf[GStarModElement]
   }
   // the public key is the multiplcation of each share (or the addition of each exponent)
-  val publicKey = shares.reduce( (a,b) => a.apply(b) )
+  val publicKey = shares.reduce( (a,b) => a.apply(b) ).asInstanceOf[GStarModElement]
   val publicKeyString = publicKey.convertToString
 
   // create votes
@@ -196,8 +197,7 @@ object MixerTrustee extends Mixer {
     println("Mixer shuffle..")
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
-    val keyPairGen = elGamal.getKeyPairGenerator()
-    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    val pk = cSettings.group.getElementFrom(publicKey)
 
     println("Convert votes..")
 
@@ -215,9 +215,7 @@ object MixerTrustee extends Mixer {
   def preShuffleVotes(votes: Seq[String], publicKey: String, id: String, cSettings: CryptoSettings) = {
     println("Mixer preShuffle..")
 
-    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
-    val keyPairGen = elGamal.getKeyPairGenerator()
-    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    val pk = cSettings.group.getElementFrom(publicKey)
 
     preShuffle(votes.size, pk, cSettings, id)
   }
@@ -231,8 +229,7 @@ object MixerTrustee extends Mixer {
     publicKey: String, id: String, cSettings: CryptoSettings) = {
     println("Mixer online phase..")
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
-    val keyPairGen = elGamal.getKeyPairGenerator()
-    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    val pk = cSettings.group.getElementFrom(publicKey)
     println("Convert votes..")
 
     val votes = votesString.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
