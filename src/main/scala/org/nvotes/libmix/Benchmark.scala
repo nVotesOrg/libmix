@@ -46,10 +46,10 @@ object Benchmark extends App {
 
   // create public key
   val shares = allShares.map { share =>
-    Util.getPublicKeyFromString(share.keyShare, cSettings.generator).asInstanceOf[GStarModElement]
+    Util.getPublicKeyFromString(share.keyShare, cSettings.generator)
   }
   // the public key is the multiplcation of each share (or the addition of each exponent)
-  val publicKey = shares.reduce( (a,b) => a.apply(b) ).asInstanceOf[GStarModElement]
+  val publicKey = shares.reduce( (a,b) => a.apply(b) )
   val publicKeyString = publicKey.convertToString
 
   // create votes

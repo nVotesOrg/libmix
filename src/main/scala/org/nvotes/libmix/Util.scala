@@ -2,6 +2,7 @@ package org.nvotes.libmix
 
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractSet
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Element
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModElement
 import ch.bfh.unicrypt.crypto.schemes.encryption.classes.ElGamalEncryptionScheme
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Element
 import ch.bfh.unicrypt.math.algebra.general.classes.Pair
@@ -42,7 +43,7 @@ object Util {
 
   /** Returns random elements from the encryption space, useful to generate
     random encryptions faster than encrypting known plaintexts */
-  def getRandomVotes(size: Int, generator: Element[_], publicKey: Element[_]) = {
+  def getRandomVotes(size: Int, generator: GStarModElement, publicKey: GStarModElement) = {
     val elGamal = ElGamalEncryptionScheme.getInstance(generator)
 
     (1 to size).par.map { _ =>
@@ -52,7 +53,7 @@ object Util {
 
   /** Returns random elements from the encryption space as Strings, useful to generate
     random encryptions faster than encrypting known plaintexts */
-  def getRandomVotesStr(size: Int, generator: Element[_], publicKey: Element[_]) = {
+  def getRandomVotesStr(size: Int, generator: GStarModElement, publicKey: GStarModElement) = {
     val elGamal = ElGamalEncryptionScheme.getInstance(generator)
 
     (1 to size).par.map { _ =>
@@ -61,7 +62,7 @@ object Util {
   }
 
   /** Encodes and encrypts the given plaintexts, using parallelism */
-  def encryptVotes(plaintexts: Seq[Int], cSettings: CryptoSettings, publicKey: Element[_]) = {
+  def encryptVotes(plaintexts: Seq[Int], cSettings: CryptoSettings, publicKey: GStarModElement) = {
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val encoder = ZModPrimeToGStarModSafePrime.getInstance(cSettings.group)
 
@@ -73,10 +74,10 @@ object Util {
   }
 
   /** Returns the the public key corresponding to the input string */
-  def getPublicKeyFromString(publicKey: String, generator: Element[_]) = {
+  def getPublicKeyFromString(publicKey: String, generator: GStarModElement): GStarModElement = {
     val elGamal = ElGamalEncryptionScheme.getInstance(generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
-    keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    keyPairGen.getPublicKeySpace().getElementFrom(publicKey).asInstanceOf[GStarModElement]
   }
 
   /** Get an element from its string representation
