@@ -14,6 +14,8 @@ import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractCyclicGroup
 import ch.bfh.unicrypt.helper.random.deterministic.CTR_DRBG
 import ch.bfh.unicrypt.helper.random.deterministic.DeterministicRandomByteSequence
 import ch.bfh.unicrypt.helper.math.MathUtil
+import ch.bfh.unicrypt.helper.array.classes.ByteArray
+
 import java.math.BigInteger
 import scala.collection.JavaConverters._
 
@@ -95,6 +97,24 @@ object Util {
    */
   def fromString[A <: Element[B],B](set: AbstractSet[A, B], value: String): Element[B] = {
     set.getElementFrom(value)
+  }
+
+  /** Get an element from its byte array representation
+   *
+   *  This function exists because the scala compiler reports an ambiguity
+   *  when using the getElementFrom method without casting to AbstractSet,
+   *  since ProductSet contains an ellipsis overload which accepts one argument
+   *  as a particular case.
+   *
+   *  We can either rename this function or get rid of it, using casts like:
+   *
+   *  .asInstanceOf[AbstractSet[_,_]].getElementFrom
+   *
+   *  This is method is unused, but will be useful for byte serialization
+   */
+  def fromBytes[A <: Element[B],B](set: AbstractSet[A, B], value: Array[Byte]): Element[B] = {
+    val bytes = ByteArray.getInstance(value :_*)
+    set.getElementFrom(bytes)
   }
 
   /** Returns independent generators for a cyclic group, using parallelism
