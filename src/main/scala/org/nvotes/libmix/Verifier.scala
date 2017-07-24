@@ -165,17 +165,17 @@ object Verifier extends ProofSettings {
 
     val commitment1 = Util.fromString(pcps.getCommitmentSpace(), shuffleProof.permutationProof.commitment)
     val challenge1 = pcps.getChallengeSpace.getElementFrom(shuffleProof.permutationProof.challenge)
-    val response1 = pcps.getResponseSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.permutationProof.response)
+    val response1 = Util.fromString(pcps.getResponseSpace, shuffleProof.permutationProof.response)
 
     // FIXME remove trace (conversion bug code)
     // logger.info(s"deserialize commitment ${shuffleProof.mixProof.commitment}")
     // logger.info(s"commitmentspace ${spg.getCommitmentSpace}")
 
     // FIXME conversion bug code triggered here
-    val commitment2 = spg.getCommitmentSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.mixProof.commitment)
+    val commitment2 = Util.fromString(spg.getCommitmentSpace, shuffleProof.mixProof.commitment)
 
     val challenge2 = spg.getChallengeSpace.getElementFrom(shuffleProof.mixProof.challenge)
-    val response2 = spg.getResponseSpace.asInstanceOf[AbstractSet[_,_]].getElementFrom(shuffleProof.mixProof.response)
+    val response2 = Util.fromString(spg.getResponseSpace, shuffleProof.mixProof.response)
 
     val permutationProofDTO = shuffleProof.permutationProof
     val mixProofDTO = shuffleProof.mixProof
