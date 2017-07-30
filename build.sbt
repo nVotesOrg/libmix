@@ -1,7 +1,7 @@
 name := "libmix"
 version := "0.2-SNAPSHOT"
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.3"
 
 resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
@@ -36,5 +36,5 @@ envVars in run := Map(
 
 scalacOptions ++= Seq("-feature", "-language:existentials", "-deprecation")
 javacOptions ++= Seq("-deprecation")
-scalacOptions += "-opt:l:classpath"
+scalacOptions += "-opt:l:inline"
 javacOptions += "-Xlint:unchecked"
