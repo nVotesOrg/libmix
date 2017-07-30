@@ -172,6 +172,7 @@ public class FeldmanSecretSharingScheme {
         ZModElement xVal;
 
         for (int i = 0; i < size; i++) {
+            // share at index 0 is share for party 1, and so forth
             xs[i] = this.zModPrime.getElement(BigInteger.valueOf(i + 1));
             ys[i] = (ZModElement) polynomial.getPoint(xs[i]).getSecond();
         }

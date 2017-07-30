@@ -89,11 +89,10 @@ object Util {
    *  since ProductSet contains an ellipsis overload which accepts one argument
    *  as a particular case.
    *
-   *  We can either rename this function or get rid of it, using casts like:
+   *  Calling this function can be avoided by using casts like:
    *
    *  .asInstanceOf[AbstractSet[_,_]].getElementFrom(string)
    *
-   *  This is employed in Verifier.
    */
   def fromString[A <: Element[B],B](set: AbstractSet[A, B], value: String): Element[B] = {
     set.getElementFrom(value)

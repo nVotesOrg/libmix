@@ -152,13 +152,15 @@ class CryptoSpec extends FlatSpec {
 
     // get the trustee positions together with the trustee secrets
     val s = subset.map{ t =>
-      // the trustee secrets are the sum of all shares received from other trustees
-      val points = allShares.filter(_ != t).map{ sc =>
+      // get the shares for this trustee, as points
+      // this includes a share from the trustee to itself
+      val points = allShares.map { sc =>
         val x = sc.xs(t)
         val y = sc.ys(t)
         (x,y)
       }
-      // the trustee secrets are the sum of all shares received from other trustees
+      // the trustee secrets are the sum of all points, the one computed by
+      // this trustee plus those received from other trustees
       points.reduce( (x,y) => (x._1, x._2.apply(y._2)))
     }
 
