@@ -1,6 +1,7 @@
 package org.nvotes.libmix.mpservice;
 
 import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 import java.math.BigInteger;
@@ -32,8 +33,8 @@ public class MPBridge {
     private boolean recording = false;
     private boolean replaying = false;
 
-    private LinkedList<ModPow2> requests = new LinkedList<ModPow2>();
-    private List<BigInteger> answers = null;
+    private ArrayList<ModPow2> requests = new ArrayList<ModPow2>();
+    private LinkedList<BigInteger> answers = null;
 
     /**
      *  Allows extraction from multithreaded code, creating one
@@ -130,21 +131,12 @@ public class MPBridge {
     }
 
     /**
-     *  Returns the recorded requests.
-     */
-    public static LinkedList<ModPow2> getRequests() {
-        if(i().recording) throw new IllegalStateException();
-
-        return i().requests;
-    }
-
-    /**
      *  Returns a result, as calculated by MPService.
      */
     public static BigInteger getModPow() {
         if(i().recording) throw new IllegalStateException();
 
-        return i().answers.remove(0);
+        return i().answers.removeFirst();
     }
 
     /**
