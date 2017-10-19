@@ -81,6 +81,7 @@ public class MPBridge {
     public static ModPow2[] stopRecord() {
         i().recording = false;
 
+        // FIXME performance hit due to copying array
         return i().requests.toArray(new ModPow2[0]);
     }
 
