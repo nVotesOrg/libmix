@@ -70,7 +70,7 @@ object Verifier extends ProofSettings {
     : Boolean = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
-    val keyPairGen: KeyPairGenerator = elGamal.getKeyPairGenerator();
+    val keyPairGen: KeyPairGenerator = elGamal.getKeyPairGenerator()
     val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(share.keyShare)
     val proofFunction = keyPairGen.getPublicKeyGenerationFunction()
 
@@ -99,7 +99,7 @@ object Verifier extends ProofSettings {
    * Returns true if the proof is correct, false otherwise.
    */
   def verifyPartialDecryption(pd: PartialDecryptionDTO, votes: Seq[Tuple], cSettings: CryptoSettings,
-    proverId: String, publicShare: GStarModElement): Boolean = {
+    proverId: String, publicShare: GStarModElement, invert: Boolean =true): Boolean = {
 
     val encryptionGenerator = cSettings.generator
     val generatorFunctions = votes.par.map { x: Tuple =>
@@ -108,11 +108,17 @@ object Verifier extends ProofSettings {
 
     // Create proof functions
     val f1: Function = GeneratorFunction.getInstance(encryptionGenerator)
-    val f2: Function = CompositeFunction.getInstance(
+    val f2: Function = if(invert) {
+      CompositeFunction.getInstance(
         InvertFunction.getInstance(cSettings.group.getZModOrder()),
         MultiIdentityFunction.getInstance(cSettings.group.getZModOrder(), generatorFunctions.length),
         ProductFunction.getInstance(generatorFunctions :_*))
-
+    }
+    else {
+      CompositeFunction.getInstance(
+        MultiIdentityFunction.getInstance(cSettings.group.getZModOrder(), generatorFunctions.length),
+        ProductFunction.getInstance(generatorFunctions :_*))
+    }
     val pdElements = pd.partialDecryptions.par.map(cSettings.group.getElementFrom(_)).seq
 
     val publicInput: Pair = Pair.getInstance(publicShare, Tuple.getInstance(pdElements:_*))

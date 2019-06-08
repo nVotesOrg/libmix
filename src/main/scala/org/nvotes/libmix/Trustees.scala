@@ -80,17 +80,25 @@ trait KeyMaker extends ProofSettings {
    * Partially decrypts a Seq of votes, creates proof of decryption
    *
    * The data is serialized and returned as a PartialDecryptionDTO
+   *
+   * Verification key is passed in if we are using a threshold setup
    */
   def partialDecrypt(votes: Seq[Tuple], privateKey: ZModElement, proverId: String,
-    cSettings: CryptoSettings): PartialDecryptionDTO = {
+    cSettings: CryptoSettings, verificationKey: Option[GStarModElement] = None, invert: Boolean = true): PartialDecryptionDTO = {
 
     val encryptionGenerator = cSettings.generator
 
-    // val secretKey = cSettings.group.getZModOrder().getElementFrom(privateKey.convertToBigInteger)
     val secretKey = privateKey
 
-    val decryptionKey = secretKey.invert()
-    val publicKey = encryptionGenerator.selfApply(secretKey)
+    // in a threshold setup the inversion is carried out during reconstruction, not during
+    // partial decryption (see CryptoSpec: val inverted = mult.invert())
+    val decryptionKey: ZModElement = if(invert) {
+      secretKey.invert()
+    }
+    else {
+      secretKey
+    }
+    val publicKey = verificationKey.getOrElse(encryptionGenerator.selfApply(secretKey))
 
     val lists = votes.par.map { v=>
       val g1 = v.getFirst()
@@ -106,7 +114,8 @@ trait KeyMaker extends ProofSettings {
       (partialDecryption, generator, partialDecryptionStr)
     }.seq.unzip3
 
-    val proofDTO = createProof(proverId, secretKey, publicKey, lists._1, lists._2, cSettings)
+    val proofDTO = createProof(proverId, secretKey, publicKey, lists._1, lists._2,
+      cSettings, invert)
 
     PartialDecryptionDTO(lists._3, proofDTO)
   }
@@ -117,17 +126,24 @@ trait KeyMaker extends ProofSettings {
    * The data is serialized and returned as a SigmaProofDTO
    */
   private def createProof(proverId: String, secretKey: ZModElement, publicKey: GStarModElement,
-    partialDecryptions: Seq[GStarModElement], generatorFunctions: Seq[Function], cSettings: CryptoSettings)
+    partialDecryptions: Seq[GStarModElement], generatorFunctions: Seq[Function],
+    cSettings: CryptoSettings, invert: Boolean = true)
     : SigmaProofDTO = {
 
     val encryptionGenerator = cSettings.generator
 
     val f1: Function = GeneratorFunction.getInstance(encryptionGenerator)
 
-    val f2: Function = CompositeFunction.getInstance(
+    val f2: Function = if(invert) {
+      CompositeFunction.getInstance(
         InvertFunction.getInstance(cSettings.group.getZModOrder()),
         MultiIdentityFunction.getInstance(cSettings.group.getZModOrder(), generatorFunctions.length),
         ProductFunction.getInstance(generatorFunctions :_*))
+    } else {
+      CompositeFunction.getInstance(
+        MultiIdentityFunction.getInstance(cSettings.group.getZModOrder(), generatorFunctions.length),
+        ProductFunction.getInstance(generatorFunctions :_*))
+    }
 
     val privateInput = secretKey
     val publicInput: Pair = Pair.getInstance(publicKey, Tuple.getInstance(partialDecryptions:_*))

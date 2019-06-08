@@ -123,11 +123,12 @@ class CryptoSpec extends FlatSpec {
     }
   }
 
-  "pedersen vss" should "encrypt and decrypt ok" in {
+  "pedersen vss" should "encrypt,decrypt and prove decryption" in {
 
     // see section 6.8 threshold elgamal in user anonymization pdf
 
-    val group = GStarModSafePrime.getFirstInstance(10)
+    // val group = GStarModSafePrime.getFirstInstance(10)
+    val group = Csettings.group
     val generator = group.getDefaultGenerator()
     val trustees = 5
     val threshold = 3
@@ -141,17 +142,25 @@ class CryptoSpec extends FlatSpec {
     val allShares = Array.fill(trustees)(f.share(f.getMessageSpace().getRandomElement()))
     // compute the public key
     val publicKey: GStarModElement = allShares.map(_.commitments(0)).reduce((x,y) => x.apply(y))
+    // compute the public verification keys
+    // vk = Product g^si
+    val verificationKeys: IndexedSeq[GStarModElement] = (0 to trustees - 1).map { t =>
+      val points: Array[GStarModElement] = allShares.map { sc =>
+        generator.selfApply(sc.ys(t))
+      }
+      points.reduce(_.multiply(_))
+    }
 
     val message = elGamal.getMessageSpace().getRandomElement()
     println("message " + message)
 
     val encryption = elGamal.encrypt(publicKey, message)
 
+    // threshold of trustees
     val subset = (0 to trustees - 1).filter(_ != 1).filter(_ != 4)
-    println(subset)
 
     // get the trustee positions together with the trustee secrets
-    val s = subset.map{ t =>
+    val s = subset.map { t =>
       // get the shares for this trustee, as points
       // this includes a share from the trustee to itself
       val points = allShares.map { sc =>
@@ -164,18 +173,35 @@ class CryptoSpec extends FlatSpec {
       points.reduce( (x,y) => (x._1, x._2.apply(y._2)))
     }
 
+    // obtain the subset of verification keys corresponding to the threshold trustees
+    val vks: IndexedSeq[GStarModElement] = verificationKeys.zipWithIndex.
+                filter{ case(vk, i) => i != 1 && i != 4}.map(_._1)
+
     // get the positions in order to compute lagrange coefficients
     val xs = s.map(_._1)
     // get the secrets
-    val secrets = s.map(_._2)
+    val secrets: IndexedSeq[ZModElement] = s.map(_._2)
 
     // calculate partial decryptions
     val partials = secrets.map(encryption.getFirst().selfApply(_))
+    // calculate partial decryptions using the same methods as in a non-threshold case, but
+    // with the right parameters (verification key passed in, invert = false)
+    val partials2 = secrets.zip(vks).map{ case (s,p) =>
+      KM.partialDecrypt(List(encryption), s, "0", Csettings, Some(p), false)
+    }
+    // verify partial decriptions using the same methods as in threshold case, but
+    // with the right parameters (invert = false)
+    partials2.zip(vks).map{ case (pd,vk) =>
+      val ok = Verifier.verifyPartialDecryption(
+        pd, List(encryption), Csettings, "0", vk, false)
+      assert(ok)
+    }
 
     // calculate lagrange coefficients
     val lagrange = f.lagrangeCoefficients(xs.toArray)
 
-    val zipped = partials zip lagrange
+    // the 0 is due to the fact that we are only encrypting one message
+    val zipped = partials2.map(p => Csettings.group.getElementFrom(p.partialDecryptions(0))) zip lagrange
 
     // raise the partials to the power of the lagrange coefficients
     val exp = zipped.map(x => x._1.selfApply(x._2))
