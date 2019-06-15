@@ -81,10 +81,11 @@ trait KeyMaker extends ProofSettings {
    *
    * The data is serialized and returned as a PartialDecryptionDTO
    *
-   * Verification key is passed in if we are using a threshold setup
+   * Verification key is passed in if we are using a threshold setup,
+   * in which case we are not inverting the secret key (share).
    */
   def partialDecrypt(votes: Seq[Tuple], privateKey: ZModElement, proverId: String,
-    cSettings: CryptoSettings, verificationKey: Option[GStarModElement] = None, invert: Boolean = true): PartialDecryptionDTO = {
+    cSettings: CryptoSettings, verificationKey: Option[GStarModElement] = None): PartialDecryptionDTO = {
 
     val encryptionGenerator = cSettings.generator
 
@@ -92,7 +93,7 @@ trait KeyMaker extends ProofSettings {
 
     // in a threshold setup the inversion is carried out during reconstruction, not during
     // partial decryption (see CryptoSpec: val inverted = mult.invert())
-    val decryptionKey: ZModElement = if(invert) {
+    val decryptionKey: ZModElement = if(verificationKey.isEmpty) {
       secretKey.invert()
     }
     else {
@@ -115,7 +116,7 @@ trait KeyMaker extends ProofSettings {
     }.seq.unzip3
 
     val proofDTO = createProof(proverId, secretKey, publicKey, lists._1, lists._2,
-      cSettings, invert)
+      cSettings, verificationKey.isEmpty)
 
     PartialDecryptionDTO(lists._3, proofDTO)
   }

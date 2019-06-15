@@ -187,7 +187,7 @@ class CryptoSpec extends FlatSpec {
     // calculate partial decryptions using the same methods as in a non-threshold case, but
     // with the right parameters (verification key passed in, invert = false)
     val partials2 = secrets.zip(vks).map{ case (s,p) =>
-      KM.partialDecrypt(List(encryption), s, "0", Csettings, Some(p), false)
+      KM.partialDecrypt(List(encryption), s, "0", Csettings, Some(p))
     }
     // verify partial decriptions using the same methods as in threshold case, but
     // with the right parameters (invert = false)
