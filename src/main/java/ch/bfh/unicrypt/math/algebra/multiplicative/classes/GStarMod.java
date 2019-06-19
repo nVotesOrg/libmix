@@ -1,4 +1,7 @@
 // drb modpow
+// drb backported FIPS 186-4 getIndependentGenerators from unicrypt
+// see commit https://github.com/bfh-evg/unicrypt/commit/c0ba0cc56058b7bac5c0446b3fff0e5623622f35
+// TODO hook up this implementation to the shuffling code
 /*
  * UniCrypt
  *
@@ -44,7 +47,11 @@ package ch.bfh.unicrypt.math.algebra.multiplicative.classes;
 
 import ch.bfh.unicrypt.ErrorCode;
 import ch.bfh.unicrypt.UniCryptRuntimeException;
+import ch.bfh.unicrypt.helper.array.classes.ByteArray;
 import ch.bfh.unicrypt.helper.converter.classes.biginteger.BigIntegerToBigInteger;
+import ch.bfh.unicrypt.helper.converter.classes.biginteger.ByteArrayToBigInteger;
+import ch.bfh.unicrypt.helper.converter.classes.bytearray.BigIntegerToByteArray;
+import ch.bfh.unicrypt.helper.converter.classes.bytearray.StringToByteArray;
 import ch.bfh.unicrypt.helper.converter.interfaces.Converter;
 import ch.bfh.unicrypt.helper.factorization.Factorization;
 import ch.bfh.unicrypt.helper.factorization.SpecialFactorization;
@@ -55,6 +62,8 @@ import ch.bfh.unicrypt.helper.sequence.functions.Mapping;
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Set;
 import ch.bfh.unicrypt.math.algebra.multiplicative.abstracts.AbstractMultiplicativeCyclicGroup;
 import java.math.BigInteger;
+import ch.bfh.unicrypt.helper.hash.HashMethod;
+import ch.bfh.unicrypt.helper.tree.Tree;
 
 /**
  * This interface represents the concept of a sub-group G_m (of order m) of a cyclic group of integers Z*_n with the
@@ -138,6 +147,79 @@ public class GStarMod
 	 */
 	public BigInteger getCoFactor() {
 		return this.getZStarMod().getOrder().divide(this.getOrder());
+	}
+
+	// drb FIPS 186-4
+	/**
+	 * Derives and returns a sequence of independent generators. The implementation follows the NIST standard FIPS PUB
+	 * 186-4 (Appendix A.2.3)
+	 * <p>
+	 * @see "NIST FIPS PUB 186-4, Appendix A.2.3"
+	 * @param domainParameterSeed The domain parameter seed which is concatenated to the hash input.
+	 * @return A sequence of independent generators.
+	 */
+	public final Sequence<GStarModElement> getIndependentGenerators(String domainParameterSeed) {
+		HashMethod<ByteArray> hm = HashMethod.<ByteArray>getInstance();
+		return getIndependentGenerators(domainParameterSeed,
+										StringToByteArray.getInstance(),
+										BigIntegerToByteArray.getInstance(),
+										hm,
+										ByteArrayToBigInteger.getInstance(hm.getHashAlgorithm().getByteLength()));
+	}
+
+	// drb FIPS 186-4
+	/**
+	 * Derives and returns a sequence of independent generators. The implementation follows the NIST standard FIPS PUB
+	 * 186-4 (Appendix A.2.3)
+	 * <p>
+	 * @see "NIST FIPS PUB 186-4, Appendix A.2.3"
+	 * @param domainParameterSeed The domain parameter seed which is concatenated to the hash input.
+	 * @param stringConverter     The converter used to convert strings to byte arrays.
+	 * @param indexCountConverter The converter used to convert the index and count (integer values) to byte arrays.
+	 * @param hashMethod          The hash method.
+	 * @param converter           The converter used to convert the output of the hash function to a big integer.
+	 * @return A sequence of independent generators.
+	 */
+	public final Sequence<GStarModElement> getIndependentGenerators(String domainParameterSeed, Converter<String, ByteArray> stringConverter, Converter<BigInteger, ByteArray> indexCountConverter, HashMethod<ByteArray> hashMethod, Converter<ByteArray, BigInteger> converter) {
+		System.out.println(">>>>> GStarMod: getIndependentGenerators");
+
+		Mapping<Integer, Integer> iterator = new Mapping<Integer, Integer>() {
+			@Override public Integer apply(Integer value) {
+				return value + 1;
+			}
+		};
+
+		Mapping<Integer, GStarModElement> generator = new Mapping<Integer, GStarModElement>() {
+			@Override public GStarModElement apply(Integer index) {
+				int count = 0;
+				BigInteger g;
+				do {
+					count++;
+					Tree<ByteArray> u = Tree.getInstance(stringConverter.convert(domainParameterSeed), stringConverter.convert("ggen"), indexCountConverter.convert(BigInteger.valueOf(index)), indexCountConverter.convert(BigInteger.valueOf(count)));
+					ByteArray w = hashMethod.getHashValue(u);
+					g = org.nvotes.libmix.mpservice.MPBridge.modPow
+						(converter.convert(w), GStarMod.this.getCoFactor(), GStarMod.this.getModulus());
+				} while (g.compareTo(MathUtil.ONE) <= 0);
+
+				return GStarMod.this.abstractGetElement(g);
+			}
+		};
+
+
+
+		return Sequence.getInstance(1, iterator).map(generator);
+
+		/*return Sequence.getInstance(1, index -> index + 1).map(index -> {
+			int count = 0;
+			BigInteger g;
+			do {
+				count++;
+				Tree<ByteArray> u = Tree.getInstance(stringConverter.convert(domainParameterSeed), stringConverter.convert("ggen"), indexCountConverter.convert(BigInteger.valueOf(index)), indexCountConverter.convert(BigInteger.valueOf(count)));
+				ByteArray w = hashMethod.getHashValue(u);
+				g = MathUtil.modExp(converter.convert(w), this.getCoFactor(), this.getModulus());
+			} while (g.compareTo(MathUtil.ONE) <= 0);
+			return this.abstractGetElement(g);
+		});*/
 	}
 
 	@Override

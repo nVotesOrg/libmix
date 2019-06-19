@@ -174,20 +174,20 @@ public abstract class AbstractCyclicGroup<E extends Element<V>, V>
 	protected Sequence<E> defaultGetElements() {
 		final AbstractCyclicGroup<E, V> group = this;
 		return Sequence.getInstance(this.getDefaultGenerator(), new Mapping<E, E>() {
-
-								 @Override
-								 public E apply(E element) {
-									 return group.apply(group.getDefaultGenerator(), element);
-								 }
-
-							 }).limit(new Predicate<E>() {
-
 			@Override
-			public boolean test(E element) {
-				return group.getIdentityElement().equals(element);
+			public E apply(E element) {
+				return group.apply(group.getDefaultGenerator(), element);
 			}
 
-		});
+			}).limit(new Predicate<E>() {
+
+				@Override
+				public boolean test(E element) {
+					return group.getIdentityElement().equals(element);
+				}
+
+			}
+		);
 	}
 
 	// we return true by default, because we assume that most cyclic groups will be of prime order

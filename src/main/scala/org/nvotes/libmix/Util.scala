@@ -118,7 +118,7 @@ object Util {
 
   /** Returns independent generators for a cyclic group, using parallelism
    *
-   *  Independent generators are necessaray for TW proofs of shuffle.
+   *  Independent generators are necessary for TW proofs of shuffle.
    */
   def getIndependentGenerators[E <: Element[_]](group: AbstractCyclicGroup[E, _], skip: Int, size: Int): java.util.List[E] = {
     val split = generatorParallelism
