@@ -64,6 +64,9 @@ import ch.bfh.unicrypt.math.algebra.multiplicative.abstracts.AbstractMultiplicat
 import java.math.BigInteger;
 import ch.bfh.unicrypt.helper.hash.HashMethod;
 import ch.bfh.unicrypt.helper.tree.Tree;
+import ch.bfh.unicrypt.math.algebra.general.interfaces.Element;
+import ch.bfh.unicrypt.helper.array.classes.DenseArray;
+import org.nvotes.libmix.Util$;
 
 /**
  * This interface represents the concept of a sub-group G_m (of order m) of a cyclic group of integers Z*_n with the
@@ -84,6 +87,8 @@ public class GStarMod
 	   extends AbstractMultiplicativeCyclicGroup<GStarModElement, BigInteger> {
 
 	private static final long serialVersionUID = 1L;
+
+	private static boolean generatorsParallel = Util$.MODULE$.getEnvBoolean("libmix.parallel-generators");
 
 	protected final BigInteger modulus;
 	private final SpecialFactorization modulusFactorization;
@@ -149,7 +154,7 @@ public class GStarMod
 		return this.getZStarMod().getOrder().divide(this.getOrder());
 	}
 
-	// drb FIPS 186-4
+	// drb FIPS 186-4 from unicrypt
 	/**
 	 * Derives and returns a sequence of independent generators. The implementation follows the NIST standard FIPS PUB
 	 * 186-4 (Appendix A.2.3)
@@ -167,7 +172,7 @@ public class GStarMod
 										ByteArrayToBigInteger.getInstance(hm.getHashAlgorithm().getByteLength()));
 	}
 
-	// drb FIPS 186-4
+	// drb FIPS 186-4 from unicrypt adapted to java version
 	/**
 	 * Derives and returns a sequence of independent generators. The implementation follows the NIST standard FIPS PUB
 	 * 186-4 (Appendix A.2.3)
@@ -181,8 +186,6 @@ public class GStarMod
 	 * @return A sequence of independent generators.
 	 */
 	public final Sequence<GStarModElement> getIndependentGenerators(String domainParameterSeed, Converter<String, ByteArray> stringConverter, Converter<BigInteger, ByteArray> indexCountConverter, HashMethod<ByteArray> hashMethod, Converter<ByteArray, BigInteger> converter) {
-		System.out.println(">>>>> GStarMod: getIndependentGenerators");
-
 		Mapping<Integer, Integer> iterator = new Mapping<Integer, Integer>() {
 			@Override public Integer apply(Integer value) {
 				return value + 1;
@@ -205,8 +208,6 @@ public class GStarMod
 			}
 		};
 
-
-
 		return Sequence.getInstance(1, iterator).map(generator);
 
 		/*return Sequence.getInstance(1, index -> index + 1).map(index -> {
@@ -220,6 +221,20 @@ public class GStarMod
 			} while (g.compareTo(MathUtil.ONE) <= 0);
 			return this.abstractGetElement(g);
 		});*/
+	}
+
+	public final DenseArray<GStarModElement> getIndependentGeneratorsFIPS(int skip, int size) {
+		DenseArray<GStarModElement> ret = null;
+
+		if(generatorsParallel) {
+			java.util.List<GStarModElement> list = Util$.MODULE$.parGetIndependentGenerators(this, skip, size);
+			ret = DenseArray.getInstance(list);
+		}
+		else {
+			ret = DenseArray.getInstance(getIndependentGenerators("FIPS 186-4").skip(skip).limit(size));
+		}
+
+		return ret;
 	}
 
 	@Override

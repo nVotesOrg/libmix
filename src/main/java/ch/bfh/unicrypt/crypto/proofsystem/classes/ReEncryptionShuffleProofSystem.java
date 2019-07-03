@@ -70,6 +70,7 @@ import ch.bfh.unicrypt.math.function.classes.ProductFunction;
 
 // drb
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractCyclicGroup;
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarMod;
 
 /**
  * The implementation of the re-encryption shuffle proof according to Wikström (@see Wik09 Protocol2:
@@ -343,7 +344,8 @@ public class ReEncryptionShuffleProofSystem
 		// drb
 		// Tuple independentGenerators = Tuple.getInstance(
 		//	   elgamal.getCyclicGroup().getIndependentGenerators(randomByteSequence).limit(size + 1));
-		Tuple independentGenerators = Tuple.getInstance(((AbstractCyclicGroup) elgamal.getCyclicGroup()).getIndependentGeneratorsP(0, size + 1));
+		Tuple independentGenerators = Tuple.getInstance(((GStarMod) elgamal.getCyclicGroup())
+			.getIndependentGeneratorsFIPS(0, size + 1));
 
 		return getInstance(sigmaChallengeGenerator, eValuesGenerator, independentGenerators,
 						   elgamal, encryptionPK, kr);

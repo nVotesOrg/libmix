@@ -1,4 +1,4 @@
-// drb support for use-generators-parallel
+// drb support for use-generators-parallel -> Removed, no changes any more
 /*
  * UniCrypt
  *
@@ -55,9 +55,6 @@ import ch.bfh.unicrypt.math.algebra.general.interfaces.CyclicGroup;
 import ch.bfh.unicrypt.math.algebra.general.interfaces.Element;
 import ch.bfh.unicrypt.helper.array.classes.DenseArray;
 
-// drb
-import org.nvotes.libmix.Util$;
-
 /**
  * This abstract class provides a base implementation for the interface {@link CyclicGroup}.
  * <p>
@@ -72,9 +69,6 @@ import org.nvotes.libmix.Util$;
 public abstract class AbstractCyclicGroup<E extends Element<V>, V>
 	   extends AbstractGroup<E, V>
 	   implements CyclicGroup<V> {
-
-	// drb
-	private static boolean generatorsParallel = Util$.MODULE$.getEnvBoolean("libmix.parallel-generators");
 
 	private static final long serialVersionUID = 1L;
 
@@ -103,22 +97,6 @@ public abstract class AbstractCyclicGroup<E extends Element<V>, V>
 			throw new UniCryptRuntimeException(ErrorCode.NULL_POINTER, this);
 		}
 		return this.defaultGetRandomGenerators(randomByteSequence);
-	}
-
-	// drb
-	public final DenseArray<Element<V>> getIndependentGeneratorsP(int skip, int size) {
-		DenseArray<Element<V>> ret = null;
-
-		if(generatorsParallel) {
-			java.util.List<E> list = Util$.MODULE$.getIndependentGenerators(this, skip, size);
-			Element<V>[] array = list.toArray(new Element[0]);
-			ret = DenseArray.getInstance(array);
-		}
-		else {
-			ret = DenseArray.getInstance(getIndependentGenerators().skip(skip).limit(size));
-		}
-
-		return ret;
 	}
 
 	@Override

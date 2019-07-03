@@ -10,12 +10,19 @@ import ch.bfh.unicrypt.math.algebra.general.classes.Tuple
 import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import ch.bfh.unicrypt.math.algebra.general.classes.ProductSet
 import ch.bfh.unicrypt.helper.converter.classes.biginteger.ByteArrayToBigInteger
+import ch.bfh.unicrypt.helper.converter.classes.bytearray.BigIntegerToByteArray
+import ch.bfh.unicrypt.helper.converter.classes.bytearray.StringToByteArray
+import ch.bfh.unicrypt.helper.converter.classes.biginteger.BigIntegerToBigInteger
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractCyclicGroup
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarMod
 import ch.bfh.unicrypt.helper.random.deterministic.CTR_DRBG
 import ch.bfh.unicrypt.helper.random.deterministic.DeterministicRandomByteSequence
 import ch.bfh.unicrypt.helper.math.MathUtil
 import ch.bfh.unicrypt.helper.array.classes.ByteArray
+import ch.bfh.unicrypt.helper.tree.Tree
+import ch.bfh.unicrypt.helper.hash.HashMethod
 
+import java.util.List
 import java.math.BigInteger
 import scala.collection.JavaConverters._
 
@@ -25,6 +32,7 @@ import scala.collection.JavaConverters._
 object Util {
 
   val useGmp = getEnvBoolean("libmix.gmp")
+  // obsolete, remove
   val generatorParallelism = 10
 
   /** Returns a boolean system property, specified with -Dname=true|false */
@@ -120,7 +128,7 @@ object Util {
    *
    *  Independent generators are necessary for TW proofs of shuffle.
    */
-  def getIndependentGenerators[E <: Element[_]](group: AbstractCyclicGroup[E, _], skip: Int, size: Int): java.util.List[E] = {
+  def parGetIndependentGenerators[E <: Element[_]](group: AbstractCyclicGroup[E, _], skip: Int, size: Int): java.util.List[E] = {
     val split = generatorParallelism
     val total = size + skip
 
@@ -146,6 +154,54 @@ object Util {
 
     items.drop(skip).toList.asJava
   }
+
+  /** Returns independent generators for safe prime cyclic group, using parallelism
+   *  The implementation follows the NIST standard FIPS PUB
+   *  186-4 (Appendix A.2.3)
+   *
+   *  Independent generators are necessary for TW proofs of shuffle.
+   */
+  def parGetIndependentGeneratorsFIPS(group: GStarMod, skip: Int, size: Int): List[GStarModElement] = {
+    val domainParameterSeed = "FIXME"
+    val stringConverter = StringToByteArray.getInstance()
+    val indexCountConverter = BigIntegerToByteArray.getInstance()
+    val hashMethod = HashMethod.getInstance()
+    val converter = ByteArrayToBigInteger.getInstance(hashMethod.getHashAlgorithm().getByteLength())
+
+    val total = size + skip
+
+    val generators = (1 to total).par.map { index =>
+      var count = 0
+      var g = BigInteger.ONE
+      do {
+        count = count + 1
+        val u: Tree[ByteArray] = Tree.getInstance(stringConverter.convert(domainParameterSeed), stringConverter.convert("ggen"), indexCountConverter.convert(BigInteger.valueOf(index)), indexCountConverter.convert(BigInteger.valueOf(count)));
+        val w = hashMethod.getHashValue(u)
+        g = org.nvotes.libmix.mpservice.MPBridge.modPow(
+            converter.convert(w), group.getCoFactor(), group.getModulus())
+
+      } while(g.compareTo(MathUtil.ONE) <= 0)
+
+      group.getElement(g)
+    }
+
+    generators.drop(skip).toList.asJava
+  }
+
+  /*
+
+  return Sequence.getInstance(1, index -> index + 1).map(index -> {
+      int count = 0;
+      BigInteger g;
+      do {
+        count++;
+        Tree<ByteArray> u = Tree.getInstance(stringConverter.convert(domainParameterSeed), stringConverter.convert("ggen"), indexCountConverter.convert(BigInteger.valueOf(index)), indexCountConverter.convert(BigInteger.valueOf(count)));
+        ByteArray w = hashMethod.getHashValue(u);
+        g = MathUtil.modExp(converter.convert(w), this.getCoFactor(), this.getModulus());
+      } while (g.compareTo(MathUtil.ONE) <= 0);
+      return this.abstractGetElement(g);
+
+  */
 
   /** Returns the legendre symbol, optionally using native gmp code */
   def legendreSymbol(a: BigInteger, p: BigInteger): Int = {

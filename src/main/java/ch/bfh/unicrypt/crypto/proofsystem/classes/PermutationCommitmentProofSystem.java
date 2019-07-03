@@ -72,6 +72,7 @@ import ch.bfh.unicrypt.math.function.classes.ProductFunction;
 
 // drb
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractCyclicGroup;
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarMod;
 import org.nvotes.libmix.mpservice.MPBridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -462,7 +463,7 @@ public class PermutationCommitmentProofSystem
 		}
 		// drb
 		// Tuple generators = Tuple.getInstance(cyclicGroup.getIndependentGenerators(randomByteSequence).limit(size + 1));
-		Tuple generators = Tuple.getInstance(((AbstractCyclicGroup) cyclicGroup).getIndependentGeneratorsP(0, size + 1));
+		Tuple generators = Tuple.getInstance(((GStarMod) cyclicGroup).getIndependentGeneratorsFIPS(0, size + 1));
 
 		return getInstance(sigmaChallengeGenerator, eValuesGenerator, generators, kr);
 	}

@@ -58,6 +58,7 @@ import ch.bfh.unicrypt.math.function.abstracts.AbstractFunction;
 import ch.bfh.unicrypt.math.function.interfaces.Function;
 
 import ch.bfh.unicrypt.math.algebra.general.abstracts.AbstractCyclicGroup;
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarMod;
 import org.nvotes.libmix.mpservice.MPBridge;
 
 //
@@ -116,11 +117,12 @@ public class PermutationCommitmentScheme
 		if (cyclicGroup == null || size < 1 || randomByteSequence == null) {
 			throw new IllegalArgumentException();
 		}
-		Element randomizationGenerator = cyclicGroup.getIndependentGenerators(randomByteSequence).get(0);
+		// Element randomizationGenerator = cyclicGroup.getIndependentGenerators(randomByteSequence).get(0);
+		Element randomizationGenerator = ((GStarMod) cyclicGroup).getIndependentGeneratorsFIPS(0, 1).getAt(0);
 		// drb
 		// Tuple messageGenerators = Tuple.getInstance(cyclicGroup.getIndependentGenerators(randomByteSequence).skip(1).
 		// 	   limit(size));
-		Tuple messageGenerators = Tuple.getInstance(((AbstractCyclicGroup) cyclicGroup).getIndependentGeneratorsP(1, size));
+		Tuple messageGenerators = Tuple.getInstance(((GStarMod) cyclicGroup).getIndependentGeneratorsFIPS(1, size));
 
 		return new PermutationCommitmentScheme(cyclicGroup, size, randomizationGenerator, messageGenerators);
 	}

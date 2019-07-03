@@ -20,8 +20,9 @@ import org.scalatest.FlatSpec
 class CryptoSpec extends FlatSpec {
 
   val grp = GStarModSafePrime.getFirstInstance(2048)
-
+  // val grp = GStarModSafePrime.getInstance(167)
   val gen = grp.getDefaultGenerator()
+
   val Csettings = CryptoSettings(grp, gen)
 
   val shares = scala.collection.mutable.ArrayBuffer.empty[GStarModElement]
