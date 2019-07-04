@@ -227,7 +227,7 @@ public class GStarMod
 		DenseArray<GStarModElement> ret = null;
 
 		if(generatorsParallel) {
-			java.util.List<GStarModElement> list = Util$.MODULE$.parGetIndependentGenerators(this, skip, size);
+			java.util.List<GStarModElement> list = Util$.MODULE$.parGetIndependentGeneratorsFIPS(this, skip, size);
 			ret = DenseArray.getInstance(list);
 		}
 		else {
